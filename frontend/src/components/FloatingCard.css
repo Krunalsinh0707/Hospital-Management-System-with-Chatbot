@@ -1,0 +1,28 @@
+.floating-card {
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.floating-card-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, var(--accent-glow) 0%, transparent 50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+  transform: translateZ(-10px);
+}
+
+.floating-card:hover .floating-card-glow {
+  opacity: 0.6;
+}
+
+.floating-card-content {
+  position: relative;
+  z-index: 1;
+}

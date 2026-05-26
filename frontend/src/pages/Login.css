@@ -1,0 +1,107 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 440px;
+  z-index: 10;
+}
+
+.login-card {
+  padding: 40px !important;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-header .logo-glow {
+  margin: 0 auto 20px auto;
+  width: 48px; height: 48px;
+}
+
+.login-header h2 {
+  font-size: 1.5rem;
+  color: var(--text-dark);
+}
+
+.login-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-top: 8px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.error-banner {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.login-submit-btn {
+  margin-top: 12px;
+  width: 100%;
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.login-footer a {
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  transition: opacity 0.2s;
+}
+
+.login-footer a:hover {
+  opacity: 0.8;
+}
+
+.auth-logo-img {
+  height: 100px;
+  width: auto;
+  margin-bottom: 16px;
+  object-fit: contain;
+}
+
+.select-input {
+  width: 100%;
+  padding: 12px 12px 12px 42px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  appearance: none;
+  cursor: pointer;
+}
+
+.select-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+.select-input option {
+  background: white;
+  color: var(--text-dark);
+}

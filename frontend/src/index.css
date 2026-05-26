@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg-clinical: #F7FAFC;
+  --primary-clinical: #0F9D8A;
+  --text-primary: #1F2937;
+  --text-secondary: #4B5563;
+  --text-muted: #9CA3AF;
+  --danger: #EF4444;
+  --success: #10B981;
+  --warning: #F59E0B;
+  
+  /* Legacy/Common Variables */
+  --primary-color: #0F9D8A;
+  --accent-color: #2DD4BF;
+  --text-dark: #0F172A;
+  --radius-xl: 24px;
+  --radius-lg: 16px;
+  --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  --radius-clinical: 12px;
+  --shadow-clinical: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+@theme {
+  --color-primary-clinical: var(--primary-clinical);
+  --color-bg-clinical: var(--bg-clinical);
+  --color-text-primary: var(--text-primary);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-clinical);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar for clinical feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E0;
+}
+
+/* Clinical Card Base */
+.clinical-card {
+  background: #FFFFFF;
+  border-radius: var(--radius-clinical);
+  box-shadow: var(--shadow-card);
+  border: 1px solid #E2E8F0;
+  transition: all 0.3s ease;
+}
+
+.clinical-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  border-color: #CBD5E0;
+}
+
+/* Strict Typography */
+h1 { @apply text-[24px] font-bold tracking-tight; }
+h2 { @apply text-[20px] font-bold tracking-tight; }
+h3 { @apply text-[16px] font-semibold; }
+p { @apply text-[14px] leading-relaxed; }
+
+.text-small-uppercase {
+  @apply text-[10px] font-black uppercase tracking-[0.1em] text-slate-400;
+}
+
+.clinical-page-container {
+  @apply min-h-screen bg-[#F7FAFC] p-6 lg:p-8 max-w-[1600px] mx-auto;
+}
+
+/* Glassmorphism Utility */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+

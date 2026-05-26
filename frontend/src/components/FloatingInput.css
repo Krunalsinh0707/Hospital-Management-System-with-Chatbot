@@ -1,0 +1,121 @@
+.floating-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  position: relative;
+}
+
+.floating-input-container .input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 0 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  height: 56px;
+}
+
+.floating-input-container .input-wrapper:hover {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(46, 196, 182, 0.3);
+}
+
+.floating-input-container .input-wrapper.focused {
+  background: #ffffff;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(46, 196, 182, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.01);
+}
+
+.floating-input-container.has-error .input-wrapper {
+  border-color: #EF4444;
+  background: rgba(239, 68, 68, 0.02);
+}
+
+.floating-input-container.has-error .input-wrapper.focused {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.floating-input-container .input-icon-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  margin-right: 12px;
+  z-index: 2;
+  transition: color 0.3s;
+}
+
+.floating-input-container .input-wrapper.focused .input-icon-left {
+  color: var(--primary-color);
+}
+
+.floating-input-container.has-error .input-icon-left {
+  color: #EF4444;
+}
+
+.floating-input-container input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text-dark);
+  padding: 16px 0 0 0; /* Space for the floating label */
+  z-index: 1;
+}
+
+/* Hide default placeholder when label is going to float */
+.floating-input-container input::placeholder {
+  color: transparent;
+  transition: color 0.3s;
+}
+
+.floating-input-container .input-wrapper.focused input::placeholder {
+  color: var(--text-muted);
+}
+
+.floating-input-container label {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 1rem;
+  pointer-events: none;
+  transition: all 0.2s ease-out;
+  z-index: 2;
+}
+
+/* Adjust label position if there is an icon */
+.floating-input-container .input-icon-left ~ label {
+  left: 46px; /* 16px padding + 18px icon + 12px margin */
+}
+
+/* Floating label state */
+.floating-input-container label.floating {
+  transform: translateY(-20px) scale(0.75);
+  top: 50%;
+  transform-origin: left top;
+  color: var(--text-muted);
+}
+
+.floating-input-container .input-wrapper.focused label.floating {
+  color: var(--primary-color);
+}
+
+.floating-input-container.has-error label {
+  color: #EF4444 !important;
+}
+
+.floating-input-container .error-text {
+  color: #EF4444;
+  font-size: 0.8rem;
+  margin-left: 8px;
+  display: block;
+}

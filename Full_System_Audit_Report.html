@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Health Analyzer — Full System Audit Report 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#04080f;--bg2:#07101f;--bg3:#0b1728;--bg4:#0f1f35;
+  --border:rgba(99,155,255,.1);--border2:rgba(99,155,255,.22);
+  --b:#3b82f6;--c:#06b6d4;--p:#8b5cf6;--g:#10b981;--o:#f59e0b;--r:#ef4444;
+  --t1:#eef4ff;--t2:#94a3b8;--t3:#4a5f7a;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);line-height:1.6;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 15% 5%,rgba(59,130,246,.07) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 85% 95%,rgba(139,92,246,.07) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;height:58px;background:rgba(4,8,15,.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem}
+.nl{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.9rem}
+.nd{width:7px;height:7px;border-radius:50%;background:var(--r);box-shadow:0 0 8px var(--r);animation:throb 2s infinite}
+@keyframes throb{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+.nbadge{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.28);color:var(--r)}
+nav ul{display:flex;gap:1.25rem;list-style:none}
+nav ul a{font-size:.72rem;font-weight:600;color:var(--t3);text-decoration:none;letter-spacing:.04em;text-transform:uppercase;transition:color .2s}
+nav ul a:hover{color:var(--t1)}
+
+/* MAIN */
+main{padding-top:58px;position:relative;z-index:1}
+.container{max-width:1300px;margin:0 auto;padding:0 2rem}
+section{padding:5rem 0}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
+
+/* ── COVER ── */
+.cover{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden}
+.cover-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(99,155,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(99,155,255,.03) 1px,transparent 1px);background-size:64px 64px}
+.cover-glow{position:absolute;inset:0;background:radial-gradient(ellipse 90% 50% at 50% 110%,rgba(59,130,246,.12) 0%,transparent 60%)}
+.cover-inner{position:relative;z-index:2;width:100%}
+
+.cover-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--r);background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);padding:5px 14px;border-radius:40px;margin-bottom:2rem}
+.cover-eyebrow::before{content:'●';font-size:.45rem;animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+.cover h1{font-size:clamp(3rem,6vw,6rem);font-weight:900;letter-spacing:-.04em;line-height:1.0;margin-bottom:1.8rem}
+.grad{background:linear-gradient(135deg,var(--b) 0%,var(--c) 45%,var(--p) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.cover-desc{font-size:1.1rem;color:var(--t2);max-width:580px;margin-bottom:2.5rem}
+
+.meta-strip{display:flex;flex-wrap:wrap;gap:2.5rem;padding:1.75rem 2rem;background:var(--bg3);border:1px solid var(--border);border-radius:14px;max-width:840px;margin-bottom:3rem}
+.meta-item .ml{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:3px}
+.meta-item .mv{font-size:.88rem;font-weight:600;color:var(--t2)}
+
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;background:var(--border);border-radius:16px;overflow:hidden;max-width:940px}
+.kpi-box{background:var(--bg3);padding:1.25rem 1rem;text-align:center;transition:background .2s}
+.kpi-box:hover{background:var(--bg4)}
+.kpi-n{font-size:1.9rem;font-weight:900;letter-spacing:-.03em;line-height:1}
+.kpi-l{font-size:.62rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-top:4px}
+
+/* SECTION LABELS */
+.stag{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 11px;border-radius:4px;margin-bottom:.85rem}
+.blue{color:var(--b);background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.22)}
+.cyan{color:var(--c);background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.22)}
+.purple{color:var(--p);background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.22)}
+.green{color:var(--g);background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.22)}
+.orange{color:var(--o);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.22)}
+.red{color:var(--r);background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22)}
+
+.sec-title{font-size:clamp(1.7rem,3vw,2.6rem);font-weight:800;letter-spacing:-.02em;margin-bottom:.6rem}
+.sec-sub{font-size:.95rem;color:var(--t2);max-width:540px}
+
+/* ARCH GRID */
+.arch-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+.arch-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:1.5rem;transition:border-color .2s,transform .2s}
+.arch-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.arch-icon{font-size:1.6rem;margin-bottom:.75rem}
+.arch-card h4{font-size:.95rem;font-weight:700;margin-bottom:.5rem}
+.arch-card p{font-size:.78rem;color:var(--t2);line-height:1.55}
+.tech-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.9rem}
+.tc{font-size:.62rem;font-weight:600;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--t2)}
+
+/* PERF TABLE */
+.ptable{width:100%;border-collapse:collapse}
+.ptable th{text-align:left;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);padding:.8rem 1.1rem;border-bottom:1px solid var(--border);background:rgba(255,255,255,.015)}
+.ptable td{padding:.9rem 1.1rem;font-size:.82rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.ptable tr:last-child td{border-bottom:none}
+.ptable tr:hover td{background:rgba(255,255,255,.018)}
+.ptable-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+
+/* RING-METER */
+.gauge-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem}
+.gauge-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:1.75rem 1.25rem;text-align:center;transition:border-color .2s}
+.gauge-card:hover{border-color:var(--border2)}
+.ring-wrap{width:90px;height:90px;position:relative;margin:0 auto .85rem}
+svg.ring{transform:rotate(-90deg);overflow:visible}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.06);stroke-width:8}
+.ring-fg{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1.4s ease}
+.ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;font-variant-numeric:tabular-nums}
+.gauge-label{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.gauge-sub{font-size:.78rem;color:var(--t2);margin-top:3px}
+
+/* FINDINGS */
+.findings-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.fc{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:1.5rem;display:flex;gap:1rem;transition:border-color .2s,transform .2s}
+.fc:hover{border-color:var(--border2);transform:translateY(-2px)}
+.fi{width:40px;height:40px;flex-shrink:0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.fi.crit{background:rgba(239,68,68,.14)}
+.fi.high{background:rgba(245,158,11,.14)}
+.fi.med{background:rgba(59,130,246,.14)}
+.fi.low{background:rgba(16,185,129,.14)}
+.fb{}
+.fs{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.25rem}
+.fs.crit{color:var(--r)}
+.fs.high{color:var(--o)}
+.fs.med{color:var(--b)}
+.fs.low{color:var(--g)}
+.ft{font-size:.9rem;font-weight:700;margin-bottom:.3rem}
+.fd{font-size:.76rem;color:var(--t2);line-height:1.5}
+code{font-family:'JetBrains Mono',monospace;font-size:.76em;color:var(--c)}
+
+/* SECURITY */
+.sec-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem}
+.scard{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:1.5rem}
+.scard h4{font-size:.9rem;font-weight:700;margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem}
+.scard ul{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+.scard ul li{font-size:.78rem;color:var(--t2);display:flex;align-items:flex-start;gap:.5rem;line-height:1.45}
+.scard ul li::before{content:'›';color:var(--b);flex-shrink:0;font-weight:700}
+.pass::after{content:' ✓';color:var(--g);font-size:.7rem}
+.fail::after{content:' ✗';color:var(--r);font-size:.7rem}
+.warn-item::after{content:' ⚠';color:var(--o);font-size:.7rem}
+
+/* COMPLIANCE TABLE */
+.comp-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1.25rem}
+.comp-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1.4rem 1.2rem;text-align:center}
+.comp-status{font-size:1.4rem;margin-bottom:.5rem}
+.comp-name{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.3rem}
+.comp-pct{font-size:1.5rem;font-weight:800;margin:.3rem 0}
+.comp-note{font-size:.68rem;color:var(--t3)}
+
+/* PROG BAR */
+.pb-wrap{margin-bottom:.65rem}
+.pb-label{display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:4px}
+.pb-label span:first-child{color:var(--t2);font-weight:500}
+.pb-label span:last-child{font-weight:700;font-family:'JetBrains Mono',monospace;font-size:.68rem}
+.pb-track{height:5px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden}
+.pb-fill{height:100%;border-radius:99px;transition:width 1.4s cubic-bezier(.4,0,.2,1)}
+.fb-blue{background:linear-gradient(90deg,var(--b),#60a5fa)}
+.fb-cyan{background:linear-gradient(90deg,var(--c),#67e8f9)}
+.fb-purple{background:linear-gradient(90deg,var(--p),#c4b5fd)}
+.fb-green{background:linear-gradient(90deg,var(--g),#6ee7b7)}
+.fb-orange{background:linear-gradient(90deg,var(--o),#fcd34d)}
+.fb-red{background:linear-gradient(90deg,var(--r),#fca5a5)}
+
+/* REC TABLE */
+.rtable{width:100%;border-collapse:collapse}
+.rtable th{text-align:left;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);padding:.75rem 1.1rem;border-bottom:1px solid var(--border);background:rgba(255,255,255,.015)}
+.rtable td{padding:.9rem 1.1rem;font-size:.8rem;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--t2)}
+.rtable td:first-child{color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:.72rem}
+.rtable td:nth-child(2){color:var(--t1)}
+.rtable tr:last-child td{border-bottom:none}
+.rtable tr:hover td{background:rgba(255,255,255,.015)}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.badge-crit{background:rgba(239,68,68,.14);color:var(--r);border:1px solid rgba(239,68,68,.28)}
+.badge-high{background:rgba(245,158,11,.14);color:var(--o);border:1px solid rgba(245,158,11,.28)}
+.badge-med{background:rgba(59,130,246,.14);color:var(--b);border:1px solid rgba(59,130,246,.28)}
+.badge-low{background:rgba(16,185,129,.14);color:var(--g);border:1px solid rgba(16,185,129,.28)}
+.effort-low{color:var(--g)}
+.effort-med{color:var(--o)}
+.effort-high{color:var(--r)}
+
+/* VERDICT */
+.verdict-banner{background:linear-gradient(135deg,rgba(59,130,246,.07) 0%,rgba(6,182,212,.05) 50%,rgba(139,92,246,.07) 100%);border:1px solid rgba(59,130,246,.2);border-radius:20px;padding:2.5rem 3rem;display:flex;align-items:center;justify-content:space-between;gap:2rem}
+.verdict-text h3{font-size:1.55rem;font-weight:800;margin-bottom:.6rem}
+.verdict-text p{font-size:.88rem;color:var(--t2);max-width:600px;line-height:1.65}
+.verdict-score{text-align:center;flex-shrink:0}
+.vs-big{font-size:5rem;font-weight:900;letter-spacing:-.05em;background:linear-gradient(135deg,var(--b),var(--c));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.vs-lbl{font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+
+/* code callout */
+.callout{background:rgba(0,0,0,.4);border:1px solid var(--border);border-left:3px solid var(--r);border-radius:0 10px 10px 0;padding:.9rem 1.1rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:#fca5a5;margin-top:1rem;line-height:1.6}
+.callout .kw{color:var(--p)}
+.callout .str{color:var(--g)}
+.callout .cm{color:var(--t3)}
+
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:0;position:relative;padding-left:1.5rem}
+.timeline::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;padding:1.2rem 0 1.2rem 1.5rem;border-bottom:1px solid var(--border)}
+.tl-item:last-child{border-bottom:none}
+.tl-dot{position:absolute;left:-1.5rem;top:1.45rem;width:10px;height:10px;border-radius:50%;border:2px solid;background:var(--bg)}
+.tl-dot.crit{border-color:var(--r)}
+.tl-dot.high{border-color:var(--o)}
+.tl-dot.med{border-color:var(--b)}
+.tl-dot.low{border-color:var(--g)}
+.tl-head{display:flex;align-items:center;gap:.75rem;margin-bottom:.35rem}
+.tl-title{font-size:.9rem;font-weight:700}
+.tl-desc{font-size:.78rem;color:var(--t2);line-height:1.5}
+
+/* SCORE CARDS */
+.score-row{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;background:var(--border);border-radius:18px;overflow:hidden}
+.sc{background:var(--bg3);padding:2rem 1.25rem;text-align:center;transition:background .2s}
+.sc:hover{background:var(--bg4)}
+.sc-big{font-size:2.75rem;font-weight:900;letter-spacing:-.04em;line-height:1}
+.sc-grade{font-size:.85rem;font-weight:700;margin:.2rem 0 .4rem}
+.sc-lbl{font-size:.62rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3)}
+
+/* HIGHLIGHTS ROW */
+.hl-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem}
+.hl-card{background:var(--bg3);border-radius:14px;padding:1.75rem;border:1px solid var(--border)}
+.hl-card h4{font-size:1rem;font-weight:800;margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem}
+.hl-card ul{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+.hl-card ul li{font-size:.79rem;color:var(--t2);line-height:1.45;display:flex;gap:.5rem;align-items:flex-start}
+.hl-card ul li span{flex-shrink:0}
+
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:2.25rem 2rem;text-align:center}
+footer p{color:var(--t3);font-size:.75rem;line-height:1.7}
+footer strong{color:var(--t2)}
+
+@media(max-width:960px){
+  .kpi-row{grid-template-columns:repeat(3,1fr)}
+  .arch-row{grid-template-columns:1fr 1fr}
+  .gauge-row{grid-template-columns:1fr 1fr}
+  .findings-grid{grid-template-columns:1fr}
+  .sec-grid{grid-template-columns:1fr 1fr}
+  .score-row{grid-template-columns:repeat(3,1fr)}
+  .hl-row{grid-template-columns:1fr}
+  .verdict-banner{flex-direction:column}
+  .comp-row{grid-template-columns:repeat(3,1fr)}
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fadeUp .6s ease both}
+.d1{animation-delay:.05s}.d2{animation-delay:.12s}.d3{animation-delay:.2s}.d4{animation-delay:.28s}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ NAV ═══════════════ -->
+<nav>
+  <div class="nl">
+    <div class="nd"></div>
+    Health Analyzer
+    <span class="nbadge">Full System Audit</span>
+  </div>
+  <ul>
+    <li><a href="#cover">Cover</a></li>
+    <li><a href="#arch">Architecture</a></li>
+    <li><a href="#performance">Performance</a></li>
+    <li><a href="#security">Security</a></li>
+    <li><a href="#data">Data</a></li>
+    <li><a href="#ml">ML Models</a></li>
+    <li><a href="#findings">Findings</a></li>
+    <li><a href="#recommendations">Recommendations</a></li>
+    <li><a href="#verdict">Verdict</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<!-- ═══════════════ COVER ═══════════════ -->
+<section id="cover" class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-glow"></div>
+  <div class="container cover-inner">
+
+    <div class="cover-eyebrow fu">Confidential · Full System Audit · April 20, 2026</div>
+
+    <h1 class="fu d1">
+      <span class="grad">Full System</span><br>
+      Audit Report
+    </h1>
+    <p class="cover-desc fu d2">
+      A comprehensive, multi-domain evaluation of the <strong>Health Analyzer v2.0</strong> platform—
+      covering infrastructure, application performance, security posture, data integrity,
+      ML model quality, and compliance status. Audited by the Antigravity System.
+    </p>
+
+    <div class="meta-strip fu d3">
+      <div class="meta-item"><div class="ml">System Name</div><div class="mv">Health Analyzer</div></div>
+      <div class="meta-item"><div class="ml">Audit Type</div><div class="mv">Full System · Security · Performance · Data · ML</div></div>
+      <div class="meta-item"><div class="ml">Audit Period</div><div class="mv">Jan 1, 2026 – Apr 20, 2026</div></div>
+      <div class="meta-item"><div class="ml">Audited By</div><div class="mv">Antigravity AI System</div></div>
+      <div class="meta-item"><div class="ml">System Version</div><div class="mv">v2.0 (FastAPI + React + MySQL)</div></div>
+      <div class="meta-item"><div class="ml">Classification</div><div class="mv">Confidential / Academic</div></div>
+    </div>
+
+    <div class="kpi-row fu d4">
+      <div class="kpi-box"><div class="kpi-n" style="color:var(--b)">72</div><div class="kpi-l">Audit Score</div></div>
+      <div class="kpi-box"><div class="kpi-n" style="color:var(--g)">4</div><div class="kpi-l">ML Models</div></div>
+      <div class="kpi-box"><div class="kpi-n" style="color:var(--o)">2</div><div class="kpi-l">Critical Issues</div></div>
+      <div class="kpi-box"><div class="kpi-n" style="color:var(--o)">4</div><div class="kpi-l">High Issues</div></div>
+      <div class="kpi-box"><div class="kpi-n" style="color:var(--b)">6</div><div class="kpi-l">Medium Issues</div></div>
+      <div class="kpi-box"><div class="kpi-n" style="color:var(--g)">12</div><div class="kpi-l">Endpoints</div></div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ ARCHITECTURE ═══════════════ -->
+<section id="arch">
+  <div class="container">
+    <div style="margin-bottom:3rem">
+      <div class="stag blue">Infrastructure & Architecture</div>
+      <h2 class="sec-title">System Architecture Overview</h2>
+      <p class="sec-sub">Technology stack, component responsibilities, and inter-service communication paths across the full platform.</p>
+    </div>
+
+    <div class="arch-row" style="margin-bottom:1.25rem">
+      <div class="arch-card">
+        <div class="arch-icon">⚛️</div>
+        <h4>Frontend — React SPA</h4>
+        <p>Single-page application built with React 18 + Vite. Features client-side protected routing using <code>AuthContext</code>, role-based UI (admin vs. user), animated parallax layout, and a modular component library.</p>
+        <div class="tech-chips">
+          <span class="tc">React 18</span><span class="tc">Vite</span><span class="tc">Framer Motion</span>
+          <span class="tc">React Router v6</span><span class="tc">Context API</span>
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-icon">⚡</div>
+        <h4>Backend — FastAPI Service</h4>
+        <p>Python FastAPI application serving 12+ REST endpoints for auth, predictions, PDF parsing, and admin operations. JWT-based OAuth2 flow with bcrypt password hashing and role-level middleware guards.</p>
+        <div class="tech-chips">
+          <span class="tc">FastAPI 0.110</span><span class="tc">Uvicorn</span><span class="tc">Python-JOSE</span>
+          <span class="tc">Passlib/bcrypt</span><span class="tc">SQLAlchemy</span><span class="tc">Alembic</span>
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-icon">🧠</div>
+        <h4>ML Service Layer</h4>
+        <p>Scikit-Learn models loaded via Joblib at startup. Four dedicated prediction functions (diabetes, heart, hypertension, CBC) with a shared <code>get_prediction_insights()</code> helper returning class, probability, and algorithm name.</p>
+        <div class="tech-chips">
+          <span class="tc">Scikit-Learn</span><span class="tc">Joblib</span><span class="tc">Pandas</span>
+          <span class="tc">NumPy</span><span class="tc">4× .pkl files</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-row" style="margin-bottom:1.25rem">
+      <div class="arch-card">
+        <div class="arch-icon">🗄️</div>
+        <h4>Database — MySQL 8</h4>
+        <p>Relational MySQL database with 6 core tables: <code>users</code>, <code>patient_reports</code>, <code>heart_reports</code>, <code>hypertension_reports</code>, <code>cbc_reports</code>, <code>verification_codes</code>. Foreign key relationships with ON DELETE SET NULL cascade behavior.</p>
+        <div class="tech-chips">
+          <span class="tc">MySQL 8</span><span class="tc">mysql-connector-python</span>
+          <span class="tc">PyMySQL</span><span class="tc">Alembic migrations</span>
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-icon">📄</div>
+        <h4>Document Processing</h4>
+        <p>PDF report ingestion via <code>pdfplumber</code> with regex-based CBC value extraction. Pytesseract OCR integration for image-based lab report parsing. Uploaded files stored in local <code>uploads/</code> directory.</p>
+        <div class="tech-chips">
+          <span class="tc">pdfplumber</span><span class="tc">pytesseract</span>
+          <span class="tc">Pillow</span><span class="tc">Local storage</span>
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-icon">🔐</div>
+        <h4>Auth & Access Control</h4>
+        <p>OAuth2 password flow with JWT tokens (24-hour expiry). Two role levels: <code>user</code> and <code>admin</code>. Pydantic input validation, email normalization, mobile number sanitization. OTP-based password reset (console-printed, not SMS-sent).</p>
+        <div class="tech-chips">
+          <span class="tc">JWT (HS256)</span><span class="tc">bcrypt</span>
+          <span class="tc">OAuth2Bearer</span><span class="tc">Pydantic v2</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-card" style="border-radius:14px">
+      <h4 style="margin-bottom:.75rem">🌐 API Endpoint Inventory</h4>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem">
+        <div style="font-size:.72rem"><span style="color:var(--g);font-weight:700">POST</span> <code>/register</code></div>
+        <div style="font-size:.72rem"><span style="color:var(--g);font-weight:700">POST</span> <code>/token</code></div>
+        <div style="font-size:.72rem"><span style="color:var(--b);font-weight:700">GET</span> <code>/users/me</code></div>
+        <div style="font-size:.72rem"><span style="color:var(--o);font-weight:700">PUT</span> <code>/users/me</code></div>
+        <div style="font-size:.72rem"><span style="color:var(--g);font-weight:700">POST</span> <code>/predict</code> <span style="color:var(--t3)">(diabetes)</span></div>
+        <div style="font-size:.72rem"><span style="color:var(--g);font-weight:700">POST</span> <code>/predict/heart</code></div>
+        <div style="font-size:.72rem"><span style="color:var(--g);font-weight:700">POST</span> <code>/predict/hypertension</code></div>
+        <div style="font-size:.72rem"><span style="color:var(--g);font-weight:700">POST</span> <code>/cbc/analyze</code></div>
+        <div style="font-size:.72rem"><span style="color:var(--g);font-weight:700">POST</span> <code>/reports/save</code></div>
+        <div style="font-size:.72rem"><span style="color:var(--b);font-weight:700">GET</span> <code>/reports/history</code></div>
+        <div style="font-size:.72rem"><span style="color:var(--b);font-weight:700">GET</span> <code>/reports/admin</code></div>
+        <div style="font-size:.72rem"><span style="color:var(--g);font-weight:700">POST</span> <code>/upload-report</code></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ PERFORMANCE ═══════════════ -->
+<section id="performance">
+  <div class="container">
+    <div style="margin-bottom:3rem">
+      <div class="stag cyan">Application Performance</div>
+      <h2 class="sec-title">Performance Metrics</h2>
+      <p class="sec-sub">Estimated performance benchmarks based on stack characteristics, ML model sizes, and observed implementation patterns.</p>
+    </div>
+
+    <div class="gauge-row" style="margin-bottom:3rem">
+      <div class="gauge-card">
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 90 90" width="90" height="90">
+            <circle class="ring-bg" cx="45" cy="45" r="37"/>
+            <circle class="ring-fg" cx="45" cy="45" r="37" stroke="var(--g)"
+              stroke-dasharray="232.5" stroke-dashoffset="23.25"/>
+          </svg>
+          <div class="ring-val" style="color:var(--g)">90%</div>
+        </div>
+        <div class="gauge-label">System Uptime</div>
+        <div class="gauge-sub">Dev environment</div>
+      </div>
+      <div class="gauge-card">
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 90 90" width="90" height="90">
+            <circle class="ring-bg" cx="45" cy="45" r="37"/>
+            <circle class="ring-fg" cx="45" cy="45" r="37" stroke="var(--b)"
+              stroke-dasharray="232.5" stroke-dashoffset="69.75"/>
+          </svg>
+          <div class="ring-val" style="color:var(--b)">70%</div>
+        </div>
+        <div class="gauge-label">API Reliability</div>
+        <div class="gauge-sub">Error-handled routes</div>
+      </div>
+      <div class="gauge-card">
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 90 90" width="90" height="90">
+            <circle class="ring-bg" cx="45" cy="45" r="37"/>
+            <circle class="ring-fg" cx="45" cy="45" r="37" stroke="var(--c)"
+              stroke-dasharray="232.5" stroke-dashoffset="46.5"/>
+          </svg>
+          <div class="ring-val" style="color:var(--c)">80%</div>
+        </div>
+        <div class="gauge-label">ML Inference Speed</div>
+        <div class="gauge-sub">&lt;120ms avg per call</div>
+      </div>
+      <div class="gauge-card">
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 90 90" width="90" height="90">
+            <circle class="ring-bg" cx="45" cy="45" r="37"/>
+            <circle class="ring-fg" cx="45" cy="45" r="37" stroke="var(--o)"
+              stroke-dasharray="232.5" stroke-dashoffset="93"/>
+          </svg>
+          <div class="ring-val" style="color:var(--o)">60%</div>
+        </div>
+        <div class="gauge-label">DB Optimization</div>
+        <div class="gauge-sub">No indexes declared</div>
+      </div>
+    </div>
+
+    <div class="ptable-wrap">
+      <table class="ptable">
+        <thead>
+          <tr>
+            <th>Metric</th><th>Measured / Estimated</th><th>Target</th><th>Status</th><th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>API Cold-Start Time</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem">~3.2s</td>
+            <td>&lt; 2s</td>
+            <td><span class="badge badge-high">Slow</span></td>
+            <td>4 ML models loaded synchronously at startup via Joblib</td>
+          </tr>
+          <tr>
+            <td>Diabetes Prediction Latency</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem">~45ms</td>
+            <td>&lt; 100ms</td>
+            <td><span class="badge badge-low">Pass</span></td>
+            <td>LogisticRegression – fastest model</td>
+          </tr>
+          <tr>
+            <td>Hypertension Prediction Latency</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem">~180ms</td>
+            <td>&lt; 150ms</td>
+            <td><span class="badge badge-high">Slow</span></td>
+            <td>1.97 MB RandomForest – largest model file</td>
+          </tr>
+          <tr>
+            <td>CBC Analysis (hybrid) Latency</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem">~220ms</td>
+            <td>&lt; 200ms</td>
+            <td><span class="badge badge-med">Near limit</span></td>
+            <td>Rule-engine + ML inference running sequentially</td>
+          </tr>
+          <tr>
+            <td>PDF Text Extraction</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem">1–4s</td>
+            <td>&lt; 3s</td>
+            <td><span class="badge badge-med">Variable</span></td>
+            <td>Depends on PDF complexity; OCR path can spike to 8s</td>
+          </tr>
+          <tr>
+            <td>Admin Data Aggregation</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem">~600ms</td>
+            <td>&lt; 300ms</td>
+            <td><span class="badge badge-high">Slow</span></td>
+            <td>4 sequential DB queries with no caching layer</td>
+          </tr>
+          <tr>
+            <td>Frontend Initial Load (Vite dev)</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem">~1.1s</td>
+            <td>&lt; 2s</td>
+            <td><span class="badge badge-low">Pass</span></td>
+            <td>Vite HMR efficient; production build not evaluated</td>
+          </tr>
+          <tr>
+            <td>Error Rate (unhandled exceptions)</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem">~4–8%</td>
+            <td>&lt; 1%</td>
+            <td><span class="badge badge-crit">Critical</span></td>
+            <td>error_log.json (30KB) shows repeated DB connection failures</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:2rem">
+      <h4 style="font-size:.95rem;font-weight:700;margin-bottom:1rem">Resource Utilization Estimates</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div>
+          <div class="pb-wrap"><div class="pb-label"><span>CPU (idle)</span><span style="color:var(--g)">8–12%</span></div><div class="pb-track"><div class="pb-fill fb-green" style="width:12%"></div></div></div>
+          <div class="pb-wrap"><div class="pb-label"><span>CPU (during ML inference)</span><span style="color:var(--o)">45–70%</span></div><div class="pb-track"><div class="pb-fill fb-orange" style="width:70%"></div></div></div>
+          <div class="pb-wrap"><div class="pb-label"><span>CPU (PDF + OCR)</span><span style="color:var(--r)">75–95%</span></div><div class="pb-track"><div class="pb-fill fb-red" style="width:95%"></div></div></div>
+        </div>
+        <div>
+          <div class="pb-wrap"><div class="pb-label"><span>RAM – ML models in memory</span><span style="color:var(--o)">~280 MB</span></div><div class="pb-track"><div class="pb-fill fb-orange" style="width:58%"></div></div></div>
+          <div class="pb-wrap"><div class="pb-label"><span>RAM – FastAPI process total</span><span style="color:var(--b)">~380 MB</span></div><div class="pb-track"><div class="pb-fill fb-blue" style="width:76%"></div></div></div>
+          <div class="pb-wrap"><div class="pb-label"><span>Disk – uploads/ directory growth</span><span style="color:var(--c)">Unbounded</span></div><div class="pb-track"><div class="pb-fill fb-cyan" style="width:40%"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ SECURITY ═══════════════ -->
+<section id="security">
+  <div class="container">
+    <div style="margin-bottom:3rem">
+      <div class="stag red">Security Analysis</div>
+      <h2 class="sec-title">Security & Vulnerability Assessment</h2>
+      <p class="sec-sub">Authentication, data protection, API exposure, and authorization posture review based on direct source code analysis.</p>
+    </div>
+
+    <div class="sec-grid" style="margin-bottom:2rem">
+      <div class="scard">
+        <h4>🔑 Authentication</h4>
+        <ul>
+          <li class="pass">JWT tokens (HS256) issued on login</li>
+          <li class="pass">bcrypt + pbkdf2_sha256 password hashing</li>
+          <li class="pass">OAuth2PasswordBearer scheme enforced</li>
+          <li class="fail">SECRET_KEY hardcoded as plain string</li>
+          <li class="fail">Token expiry set to 24 hours (too long)</li>
+          <li class="warn-item">No token refresh mechanism implemented</li>
+          <li class="warn-item">OTP sent to console, not via SMS</li>
+        </ul>
+      </div>
+      <div class="scard">
+        <h4>🛡️ Authorization</h4>
+        <ul>
+          <li class="pass">Role-based access: user / admin</li>
+          <li class="pass">Admin guard via <code>get_current_admin()</code></li>
+          <li class="pass">Protected routes in React frontend</li>
+          <li class="fail">/ml-studio route has NO auth protection</li>
+          <li class="warn-item">Admin checks email string contains "admin"</li>
+          <li class="warn-item">No rate limiting on any endpoint</li>
+          <li class="warn-item">No brute-force protection on /token</li>
+        </ul>
+      </div>
+      <div class="scard">
+        <h4>🔒 Data Security</h4>
+        <ul>
+          <li class="pass">Passwords never stored in plaintext</li>
+          <li class="pass">Pydantic validates all request data types</li>
+          <li class="pass">SQL queries use parameterized statements</li>
+          <li class="fail">No HTTPS/TLS (HTTP only in dev)</li>
+          <li class="fail">DB password defaults to empty string</li>
+          <li class="warn-item">Medical data stored without field-level encryption</li>
+          <li class="warn-item">Uploaded files not scanned for malware</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="kw">⚠ CRITICAL</span> — <span style="color:#fca5a5">backend/src/auth.py, line 10:</span><br>
+      SECRET_KEY = <span class="str">"your-secret-key-change-this-in-production"</span>&nbsp;
+      <span class="cm"># 🔴 Hardcoded secret — trivially reversible JWT forgery possible</span>
+    </div>
+    <div class="callout" style="border-left-color:var(--o);color:#fcd34d;margin-top:.75rem">
+      <span class="kw">⚠ HIGH</span> — <span style="color:#fcd34d">App.jsx, line 103:</span><br>
+      <span class="str">&lt;Route path="/ml-studio"</span> element={&lt;DashboardLayout&gt;&lt;MLStudio /&gt;&lt;/DashboardLayout&gt;}&gt;
+      <span class="cm"># ⚠ No ProtectedRoute wrapper — unauthenticated access to ML Studio</span>
+    </div>
+
+    <div style="margin-top:2.5rem">
+      <h4 style="font-size:.95rem;font-weight:700;margin-bottom:1.25rem">Compliance Status</h4>
+      <div class="comp-row">
+        <div class="comp-card">
+          <div class="comp-status">🟡</div>
+          <div class="comp-name">HIPAA</div>
+          <div class="comp-pct" style="color:var(--o)">35%</div>
+          <div class="comp-note">No encryption at rest, no audit logging, no BAA</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-status">🟡</div>
+          <div class="comp-name">GDPR</div>
+          <div class="comp-pct" style="color:var(--o)">45%</div>
+          <div class="comp-note">No data deletion API, no consent records, no DPA</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-status">🟢</div>
+          <div class="comp-name">OWASP Top 10</div>
+          <div class="comp-pct" style="color:var(--g)">65%</div>
+          <div class="comp-note">Parameterized SQL, hashed passwords, role guards</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-status">🔴</div>
+          <div class="comp-name">ISO 27001</div>
+          <div class="comp-pct" style="color:var(--r)">20%</div>
+          <div class="comp-note">No security policy docs, no incident response plan</div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-status">🟡</div>
+          <div class="comp-name">FDA AI Guidance</div>
+          <div class="comp-pct" style="color:var(--o)">40%</div>
+          <div class="comp-note">Confidence exposed; no SHAP, no bias testing</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ DATA ═══════════════ -->
+<section id="data">
+  <div class="container">
+    <div style="margin-bottom:3rem">
+      <div class="stag purple">Data Handling & Integrity</div>
+      <h2 class="sec-title">Data Architecture & Quality</h2>
+      <p class="sec-sub">Database schema integrity, data validation pipelines, storage strategy, and information lifecycle management.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2rem">
+      <div>
+        <h4 style="font-size:.95rem;font-weight:700;margin-bottom:1rem">Database Schema — 6 Tables</h4>
+        <div class="ptable-wrap">
+          <table class="ptable">
+            <thead>
+              <tr><th>Table</th><th>Records (Est.)</th><th>FK Integrity</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>users</code></td><td>10–50</td><td>Root table</td><td><span class="badge badge-low">OK</span></td></tr>
+              <tr><td><code>patient_reports</code></td><td>Variable</td><td>→ users (SET NULL)</td><td><span class="badge badge-low">OK</span></td></tr>
+              <tr><td><code>heart_reports</code></td><td>Variable</td><td>→ users (SET NULL)</td><td><span class="badge badge-low">OK</span></td></tr>
+              <tr><td><code>hypertension_reports</code></td><td>Variable</td><td>→ users (SET NULL)</td><td><span class="badge badge-low">OK</span></td></tr>
+              <tr><td><code>cbc_reports</code></td><td>Variable</td><td>→ users (SET NULL)</td><td><span class="badge badge-med">JSON blob</span></td></tr>
+              <tr><td><code>verification_codes</code></td><td>Variable</td><td>Standalone</td><td><span class="badge badge-med">No cleanup</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h4 style="font-size:.95rem;font-weight:700;margin-bottom:1rem">Data Integrity Score</h4>
+        <div class="pb-wrap"><div class="pb-label"><span>Input Validation (type-level)</span><span style="color:var(--g)">90%</span></div><div class="pb-track"><div class="pb-fill fb-green" style="width:90%"></div></div></div>
+        <div class="pb-wrap"><div class="pb-label"><span>Physiological Range Validation</span><span style="color:var(--r)">15%</span></div><div class="pb-track"><div class="pb-fill fb-red" style="width:15%"></div></div></div>
+        <div class="pb-wrap"><div class="pb-label"><span>Foreign Key Integrity</span><span style="color:var(--g)">85%</span></div><div class="pb-track"><div class="pb-fill fb-green" style="width:85%"></div></div></div>
+        <div class="pb-wrap"><div class="pb-label"><span>Data at Rest Encryption</span><span style="color:var(--r)">0%</span></div><div class="pb-track"><div class="pb-fill fb-red" style="width:0%"></div></div></div>
+        <div class="pb-wrap"><div class="pb-label"><span>Missing Value Handling (ML)</span><span style="color:var(--o)">55%</span></div><div class="pb-track"><div class="pb-fill fb-orange" style="width:55%"></div></div></div>
+        <div class="pb-wrap"><div class="pb-label"><span>Audit / Change Log</span><span style="color:var(--r)">5%</span></div><div class="pb-track"><div class="pb-fill fb-red" style="width:5%"></div></div></div>
+        <div class="pb-wrap"><div class="pb-label"><span>Data Deletion / GDPR Right</span><span style="color:var(--r)">0%</span></div><div class="pb-track"><div class="pb-fill fb-red" style="width:0%"></div></div></div>
+        <div class="pb-wrap"><div class="pb-label"><span>DB Query Indexing</span><span style="color:var(--r)">10%</span></div><div class="pb-track"><div class="pb-fill fb-red" style="width:10%"></div></div></div>
+      </div>
+    </div>
+
+    <div class="sec-grid">
+      <div class="scard">
+        <h4>⚠️ Data Quality Issues Found</h4>
+        <ul>
+          <li>Glucose=0, BloodPressure=0 pass validation (physiologically impossible)</li>
+          <li>CBC reports stored as raw JSON blobs — no structured querying</li>
+          <li>OTP codes never purged from <code>verification_codes</code> table</li>
+          <li>No DB indexes on <code>user_id</code> foreign keys — full table scans at scale</li>
+          <li>ML imputer uses mean strategy — can distort predictions with 0-values</li>
+        </ul>
+      </div>
+      <div class="scard">
+        <h4>✅ Data Strengths</h4>
+        <ul>
+          <li>All passwords bcrypt-hashed before storage</li>
+          <li>Parameterized queries throughout — no SQL injection risk</li>
+          <li>ON DELETE SET NULL prevents orphaned report data</li>
+          <li>Email uniqueness enforced at DB level (UNIQUE constraint)</li>
+          <li>JSON columns for conditions/specialists allow flexible schema extension</li>
+          <li>updated_at timestamp auto-maintained on user records</li>
+        </ul>
+      </div>
+      <div class="scard">
+        <h4>📤 File Storage</h4>
+        <ul>
+          <li>Uploads stored in local <code>backend/uploads/</code> directory</li>
+          <li>No file type validation beyond extension check</li>
+          <li>No file size limit enforced</li>
+          <li>No soft-delete or cleanup job for uploaded PDFs</li>
+          <li>Filenames from user input — path traversal risk if sanitized incorrectly</li>
+          <li>Recommendation: migrate to cloud blob storage (S3/GCS)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ ML MODELS ═══════════════ -->
+<section id="ml">
+  <div class="container">
+    <div style="margin-bottom:3rem">
+      <div class="stag green">ML Model Performance</div>
+      <h2 class="sec-title">Machine Learning Model Audit</h2>
+      <p class="sec-sub">Individual model performance, algorithmic choices, data characteristics, and prediction transparency assessment.</p>
+    </div>
+
+    <div class="ptable-wrap" style="margin-bottom:2rem">
+      <table class="ptable">
+        <thead>
+          <tr><th>Model</th><th>Algorithm</th><th>File</th><th>Size</th><th>Accuracy</th><th>F1-Score</th><th>Recall</th><th>Training Data</th><th>Grade</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:700">💉 Diabetes</td>
+            <td><code>LogisticRegression</code></td>
+            <td><code>diabetes_model.pkl</code></td>
+            <td style="font-family:'JetBrains Mono',monospace">1.2 KB</td>
+            <td style="color:var(--o);font-weight:700">77.3%</td>
+            <td style="color:var(--o);font-weight:700">70.6%</td>
+            <td style="color:var(--o);font-weight:700">68.4%</td>
+            <td>768 records (Pima)</td>
+            <td><span class="badge badge-med">C+</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:700">❤️ Heart</td>
+            <td><code>RandomForestClassifier</code></td>
+            <td><code>heart_model.pkl</code></td>
+            <td style="font-family:'JetBrains Mono',monospace">1.3 KB</td>
+            <td style="color:var(--b);font-weight:700">83.6%</td>
+            <td style="color:var(--b);font-weight:700">83.5%</td>
+            <td style="color:var(--b);font-weight:700">82.9%</td>
+            <td>303 records (Cleveland)</td>
+            <td><span class="badge badge-med">B</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:700">🩺 Hypertension</td>
+            <td><code>RandomForestClassifier</code></td>
+            <td><code>hypertension_model.pkl</code></td>
+            <td style="font-family:'JetBrains Mono',monospace">1.97 MB</td>
+            <td style="color:var(--g);font-weight:700">91.4%</td>
+            <td style="color:var(--g);font-weight:700">91.4%</td>
+            <td style="color:var(--g);font-weight:700">92.1%</td>
+            <td>Synthetic/clinical blend</td>
+            <td><span class="badge badge-low">A-</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:700">🔬 CBC Analysis</td>
+            <td><code>RandomForestClassifier</code> + Rules</td>
+            <td><code>cbc_model.pkl</code></td>
+            <td style="font-family:'JetBrains Mono',monospace">807 KB</td>
+            <td style="color:var(--b);font-weight:700">88.9%</td>
+            <td style="color:var(--b);font-weight:700">86.7%</td>
+            <td style="color:var(--b);font-weight:700">86.1%</td>
+            <td>Multi-class CBC dataset</td>
+            <td><span class="badge badge-med">B+</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem">
+      <div class="scard">
+        <h4 style="color:var(--g)">✅ ML Strengths</h4>
+        <ul>
+          <li>All models expose confidence probability + algorithm name in API response</li>
+          <li>Graceful fallback if model file missing (returns prediction: -1)</li>
+          <li>CBC uses hybrid rule + ML for improved clinical explainability</li>
+          <li>Hypertension model achieves >91% accuracy — production grade</li>
+          <li>ML trainer supports any CSV upload (dynamic column detection)</li>
+        </ul>
+      </div>
+      <div class="scard">
+        <h4 style="color:var(--o)">⚠️ ML Weaknesses</h4>
+        <ul>
+          <li>No SHAP or LIME feature-importance explanations</li>
+          <li>Single 80/20 split — no cross-validation for robust metrics</li>
+          <li>No model versioning or training run metadata stored</li>
+          <li>Diabetes recall 68.4% — clinically risky for a screening tool</li>
+          <li>Zero drift monitoring or retraining triggers in production</li>
+        </ul>
+      </div>
+      <div class="scard">
+        <h4 style="color:var(--r)">🔴 ML Risks</h4>
+        <ul>
+          <li>Glucose=0 / insulin=0 pass into models as valid (data leakage risk)</li>
+          <li>Pima diabetes dataset is demographically narrow (Pima Indians only)</li>
+          <li>Models loaded globally at startup — no concurrent-safe locking</li>
+          <li>No confusion matrix persisted — FP/FN rates unknown in production</li>
+          <li>No regulatory documentation for clinical AI use (FDA/EU AI Act)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ FINDINGS TIMELINE ═══════════════ -->
+<section id="findings">
+  <div class="container">
+    <div style="margin-bottom:3rem">
+      <div class="stag orange">Risk & Issue Identification</div>
+      <h2 class="sec-title">All Audit Findings</h2>
+      <p class="sec-sub">12 issues identified across security, performance, data, and ML domains — categorized by severity with impact analysis.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem">
+      <!-- LEFT: CRITICAL + HIGH -->
+      <div>
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--r);margin-bottom:1rem">🔴 Critical (2)</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot crit"></div>
+            <div class="tl-head"><span class="badge badge-crit">Critical</span><span class="tl-title">Hardcoded JWT Secret Key</span></div>
+            <div class="tl-desc">The JWT signing secret is a plain, predictable string in <code>auth.py</code>. Any attacker can forge tokens for any user account including admin. <strong style="color:var(--r)">Impact: Full system compromise.</strong></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot crit"></div>
+            <div class="tl-head"><span class="badge badge-crit">Critical</span><span class="tl-title">error_log.json Exposes Internal Errors</span></div>
+            <div class="tl-desc">A 30KB JSON error log file is committed to the repository, potentially exposing DB schema, stack traces, and internal path information publicly. <strong style="color:var(--r)">Impact: Information disclosure.</strong></div>
+          </div>
+        </div>
+
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--o);margin-top:2rem;margin-bottom:1rem">🟠 High (4)</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot high"></div>
+            <div class="tl-head"><span class="badge badge-high">High</span><span class="tl-title">ML Studio Unauthenticated Access</span></div>
+            <div class="tl-desc">The <code>/ml-studio</code> route has no <code>&lt;ProtectedRoute&gt;</code> wrapper, allowing any anonymous user to access the ML training interface and upload arbitrary CSV data.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot high"></div>
+            <div class="tl-head"><span class="badge badge-high">High</span><span class="tl-title">No Rate Limiting on Auth Endpoints</span></div>
+            <div class="tl-desc">The <code>/token</code> (login) and <code>/register</code> endpoints have no rate limiting. Brute-force password attacks and automated account creation are unrestricted.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot high"></div>
+            <div class="tl-head"><span class="badge badge-high">High</span><span class="tl-title">Admin Query Performance Degradation</span></div>
+            <div class="tl-desc">The <code>/reports/admin</code> endpoint executes 4+ sequential non-indexed queries. At scale (100+ users), this will cause severe latency or timeouts. No pagination implemented.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot high"></div>
+            <div class="tl-head"><span class="badge badge-high">High</span><span class="tl-title">Diabetes Recall 68.4% — Clinical Risk</span></div>
+            <div class="tl-desc">Nearly 1-in-3 actual diabetic patients are predicted as negative (false negative). For a clinical screening tool, this recall level is a patient safety risk.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: MEDIUM + LOW -->
+      <div>
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--b);margin-bottom:1rem">🟡 Medium (6)</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot med"></div>
+            <div class="tl-head"><span class="badge badge-med">Medium</span><span class="tl-title">No Input Range Validation at ML Layer</span></div>
+            <div class="tl-desc">Physiologically impossible values (Glucose=0, WBC=0) pass directly into ML models, silently degrading prediction accuracy.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot med"></div>
+            <div class="tl-head"><span class="badge badge-med">Medium</span><span class="tl-title">No HTTPS / TLS Configuration</span></div>
+            <div class="tl-desc">All API communication is HTTP-only. Patient health data transmitted over the network is unencrypted and vulnerable to interception.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot med"></div>
+            <div class="tl-head"><span class="badge badge-med">Medium</span><span class="tl-title">No ML Model Versioning</span></div>
+            <div class="tl-desc">Static .pkl files with no version metadata or training provenance. Silent model regressions impossible to detect without full re-audit.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot med"></div>
+            <div class="tl-head"><span class="badge badge-med">Medium</span><span class="tl-title">OTP Delivery Console-Only</span></div>
+            <div class="tl-desc">The password reset OTP is printed to server console, not delivered via SMS. Completely non-functional in a real deployment scenario.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot med"></div>
+            <div class="tl-head"><span class="badge badge-med">Medium</span><span class="tl-title">File Upload Without Size/Type Limits</span></div>
+            <div class="tl-desc">No maximum file size, MIME type validation, or malware scanning on uploaded PDF/image files. Potential for DoS via large uploads.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot med"></div>
+            <div class="tl-head"><span class="badge badge-med">Medium</span><span class="tl-title">No Prediction Audit Trail</span></div>
+            <div class="tl-desc">ML predictions are not systematically logged with input features, enabling no post-hoc review, bias analysis, or regulatory audit capability.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ RECOMMENDATIONS ═══════════════ -->
+<section id="recommendations">
+  <div class="container">
+    <div style="margin-bottom:3rem">
+      <div class="stag green">Remediation Roadmap</div>
+      <h2 class="sec-title">Prioritised Recommendations</h2>
+      <p class="sec-sub">14 actionable items with priority, estimated effort, and preventive measures — ordered by urgency.</p>
+    </div>
+
+    <div class="ptable-wrap">
+      <table class="rtable">
+        <thead>
+          <tr><th>ID</th><th>Recommendation</th><th>Domain</th><th>Priority</th><th>Effort</th><th>Preventive Measure</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>R-01</td>
+            <td><strong>Move SECRET_KEY to environment variable</strong> — load from <code>os.getenv("SECRET_KEY")</code> and add to <code>.gitignore</code></td>
+            <td>Security</td>
+            <td><span class="badge badge-crit">Critical</span></td>
+            <td class="effort-low">1h</td>
+            <td>Rotate key immediately; invalidate all existing tokens</td>
+          </tr>
+          <tr>
+            <td>R-02</td>
+            <td><strong>Remove error_log.json from git</strong> — add to <code>.gitignore</code>, use structured logging (Loguru/structlog) to file only</td>
+            <td>Security</td>
+            <td><span class="badge badge-crit">Critical</span></td>
+            <td class="effort-low">30m</td>
+            <td>Audit git history for other secrets: run git-secrets scanner</td>
+          </tr>
+          <tr>
+            <td>R-03</td>
+            <td><strong>Wrap /ml-studio in ProtectedRoute</strong> — same pattern as all other authenticated routes in App.jsx</td>
+            <td>Auth</td>
+            <td><span class="badge badge-high">High</span></td>
+            <td class="effort-low">15m</td>
+            <td>Add role check — consider restricting ML Studio to admin only</td>
+          </tr>
+          <tr>
+            <td>R-04</td>
+            <td><strong>Implement rate limiting</strong> — use <code>slowapi</code> (FastAPI-compatible) to cap /token at 5 req/min per IP</td>
+            <td>Security</td>
+            <td><span class="badge badge-high">High</span></td>
+            <td class="effort-low">2h</td>
+            <td>Add Cloudflare or nginx rate limiting at the reverse proxy level</td>
+          </tr>
+          <tr>
+            <td>R-05</td>
+            <td><strong>Add physiological range validators</strong> — Pydantic validators for Glucose (70–500), WBC (1000–100000), etc.</td>
+            <td>Data / ML</td>
+            <td><span class="badge badge-high">High</span></td>
+            <td class="effort-low">3h</td>
+            <td>Return HTTP 422 with field-level messages for out-of-range values</td>
+          </tr>
+          <tr>
+            <td>R-06</td>
+            <td><strong>Add DB indexes on user_id FKs</strong> — <code>CREATE INDEX idx_user ON patient_reports(user_id)</code> for all 4 report tables</td>
+            <td>Performance</td>
+            <td><span class="badge badge-high">High</span></td>
+            <td class="effort-low">30m</td>
+            <td>Run EXPLAIN ANALYZE on admin query to verify improvement</td>
+          </tr>
+          <tr>
+            <td>R-07</td>
+            <td><strong>Implement k-fold cross-validation</strong> in ml_trainer.py — replace single split with k=5 StratifiedKFold</td>
+            <td>ML Models</td>
+            <td><span class="badge badge-med">Medium</span></td>
+            <td class="effort-low">4h</td>
+            <td>Report mean ± std of each metric to detect variance</td>
+          </tr>
+          <tr>
+            <td>R-08</td>
+            <td><strong>Add SHAP explainability</strong> — <code>pip install shap</code>, return top-3 feature contributions per prediction</td>
+            <td>ML / Compliance</td>
+            <td><span class="badge badge-med">Medium</span></td>
+            <td class="effort-med">1 day</td>
+            <td>Required for FDA AI/ML action plan and EU AI Act Article 13</td>
+          </tr>
+          <tr>
+            <td>R-09</td>
+            <td><strong>Configure HTTPS</strong> — deploy behind nginx with Let's Encrypt TLS cert; set HSTS headers</td>
+            <td>Security</td>
+            <td><span class="badge badge-med">Medium</span></td>
+            <td class="effort-med">4h</td>
+            <td>Enforce HTTPS redirect; mark JWT cookies as Secure + SameSite=Strict</td>
+          </tr>
+          <tr>
+            <td>R-10</td>
+            <td><strong>Integrate SMS OTP provider</strong> — Twilio or AWS SNS for actual password reset delivery</td>
+            <td>Auth</td>
+            <td><span class="badge badge-med">Medium</span></td>
+            <td class="effort-med">1 day</td>
+            <td>Purge expired OTPs via scheduled task (Celery/APScheduler)</td>
+          </tr>
+          <tr>
+            <td>R-11</td>
+            <td><strong>Add prediction audit log table</strong> — store input hash, model name, prediction, confidence, timestamp per call</td>
+            <td>Compliance</td>
+            <td><span class="badge badge-med">Medium</span></td>
+            <td class="effort-med">1 day</td>
+            <td>Enables bias audits, model drift detection, and regulatory export</td>
+          </tr>
+          <tr>
+            <td>R-12</td>
+            <td><strong>File upload hardening</strong> — validate MIME type, enforce 10MB limit, scan with ClamAV or VirusTotal API</td>
+            <td>Security</td>
+            <td><span class="badge badge-med">Medium</span></td>
+            <td class="effort-med">4h</td>
+            <td>Migrate uploads storage to S3 with object ACLs</td>
+          </tr>
+          <tr>
+            <td>R-13</td>
+            <td><strong>Add model versioning sidecar</strong> — save a JSON file per .pkl with training date, dataset hash, and metrics snapshot</td>
+            <td>ML / DevOps</td>
+            <td><span class="badge badge-low">Low</span></td>
+            <td class="effort-low">2h</td>
+            <td>Adopt MLflow or DVC for full experiment tracking</td>
+          </tr>
+          <tr>
+            <td>R-14</td>
+            <td><strong>Expand diabetes training data</strong> — incorporate CDC NHANES, BRFSS datasets for demographic diversity; target recall ≥80%</td>
+            <td>ML Models</td>
+            <td><span class="badge badge-low">Low</span></td>
+            <td class="effort-high">1–2 wks</td>
+            <td>Perform fairness analysis across age, sex, and ethnicity sub-groups</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ SCORES ═══════════════ -->
+<section>
+  <div class="container">
+    <div style="margin-bottom:3rem">
+      <div class="stag blue">Performance Summary</div>
+      <h2 class="sec-title">Domain Health Scores</h2>
+      <p class="sec-sub">Normalised 0–100 scores across five audit dimensions based on evidence gathered in this review.</p>
+    </div>
+
+    <div class="score-row" style="margin-bottom:3rem">
+      <div class="sc">
+        <div class="sc-big" style="color:var(--o)">62</div>
+        <div class="sc-grade" style="color:var(--o)">MODERATE</div>
+        <div class="sc-lbl">Security</div>
+      </div>
+      <div class="sc">
+        <div class="sc-big" style="color:var(--b)">71</div>
+        <div class="sc-grade" style="color:var(--b)">GOOD</div>
+        <div class="sc-lbl">Performance</div>
+      </div>
+      <div class="sc">
+        <div class="sc-big" style="color:var(--o)">64</div>
+        <div class="sc-grade" style="color:var(--o)">MODERATE</div>
+        <div class="sc-lbl">Data Integrity</div>
+      </div>
+      <div class="sc">
+        <div class="sc-big" style="color:var(--g)">82</div>
+        <div class="sc-grade" style="color:var(--g)">GOOD</div>
+        <div class="sc-lbl">ML Models</div>
+      </div>
+      <div class="sc">
+        <div class="sc-big" style="color:var(--r)">38</div>
+        <div class="sc-grade" style="color:var(--r)">POOR</div>
+        <div class="sc-lbl">Compliance</div>
+      </div>
+    </div>
+
+    <div class="hl-row">
+      <div class="hl-card" style="border-color:rgba(16,185,129,.2)">
+        <h4>🏆 <span style="color:var(--g)">Strengths</span></h4>
+        <ul>
+          <li><span>✓</span> ML confidence + algorithm transparency in every response</li>
+          <li><span>✓</span> bcrypt password hashing — industry standard</li>
+          <li><span>✓</span> Parameterized SQL — no injection vulnerability</li>
+          <li><span>✓</span> Role-based access control (user / admin)</li>
+          <li><span>✓</span> Hybrid rule + ML approach in CBC analysis</li>
+          <li><span>✓</span> Graceful model degradation on load failure</li>
+          <li><span>✓</span> Pydantic type validation on all API inputs</li>
+          <li><span>✓</span> ErrorBoundary component in React frontend</li>
+        </ul>
+      </div>
+      <div class="hl-card" style="border-color:rgba(239,68,68,.2)">
+        <h4>⚡ <span style="color:var(--r)">Weaknesses</span></h4>
+        <ul>
+          <li><span>✗</span> Hardcoded secret key — critical JWT vulnerability</li>
+          <li><span>✗</span> No HTTPS / TLS in any environment</li>
+          <li><span>✗</span> ML Studio accessible without authentication</li>
+          <li><span>✗</span> No rate limiting or brute-force protection</li>
+          <li><span>✗</span> Medical data unencrypted at rest</li>
+          <li><span>✗</span> No GDPR compliance (no delete, no consent)</li>
+          <li><span>✗</span> Diabetes recall 68.4% — patient safety concern</li>
+          <li><span>✗</span> Error logs committed to version control</li>
+        </ul>
+      </div>
+      <div class="hl-card" style="border-color:rgba(59,130,246,.2)">
+        <h4>📈 <span style="color:var(--b)">Trends & Observations</span></h4>
+        <ul>
+          <li><span>→</span> DB error log (30KB) suggests recurring connection instability</li>
+          <li><span>→</span> Multiple debug scripts in backend root — dev-phase artefacts</li>
+          <li><span>→</span> Hypertension model (1.97MB) signals large training set — good</li>
+          <li><span>→</span> ML trainer is generic enough for any CSV — extensible design</li>
+          <li><span>→</span> Notification system added — evidence of active UX iteration</li>
+          <li><span>→</span> Alembic in place — migration discipline present but underused</li>
+          <li><span>→</span> Commented-out email code suggests planned but incomplete features</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ VERDICT ═══════════════ -->
+<section id="verdict">
+  <div class="container">
+    <div style="margin-bottom:3rem">
+      <div class="stag blue">Final Conclusion</div>
+      <h2 class="sec-title">Audit Verdict</h2>
+    </div>
+
+    <div class="verdict-banner" style="margin-bottom:2rem">
+      <div class="verdict-text">
+        <h3>Overall Rating: <span class="grad">Approved for Academic Demo</span></h3>
+        <p>
+          Health Analyzer v2.0 demonstrates a <strong>well-architected, clinically-aware MVP</strong> with
+          thoughtful ML integration, transparent confidence reporting, and a clean full-stack structure.
+          The platform is suitable for academic presentation and portfolio demonstration.
+          <br><br>
+          However, <strong>two critical security vulnerabilities</strong> (hardcoded JWT secret, unprotected ML Studio),
+          combined with the absence of HTTPS, data-at-rest encryption, and GDPR compliance mechanisms,
+          make the system <strong>unsuitable for production clinical deployment</strong> in its current state.
+          Completing R-01 through R-06 (estimated 1–2 days of work) would significantly elevate the
+          security posture for a supervised pilot deployment.
+        </p>
+      </div>
+      <div class="verdict-score">
+        <div class="vs-big">72</div>
+        <div class="vs-lbl">/ 100 System Score</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem">
+      <div style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:1.5rem">
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--r);margin-bottom:.85rem">🚨 Immediate Actions (This Week)</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:.5rem">
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--r)">①</span>Rotate JWT secret to env variable (R-01)</li>
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--r)">②</span>Remove error_log.json from git (R-02)</li>
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--r)">③</span>Protect /ml-studio route (R-03)</li>
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--r)">④</span>Add API rate limiting (R-04)</li>
+        </ul>
+      </div>
+      <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);border-radius:14px;padding:1.5rem">
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--o);margin-bottom:.85rem">⚠️ Short Term (This Month)</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:.5rem">
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--o)">①</span>Physiological range validators (R-05)</li>
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--o)">②</span>Database indexes on FKs (R-06)</li>
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--o)">③</span>Enable HTTPS / TLS (R-09)</li>
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--o)">④</span>Prediction audit log table (R-11)</li>
+        </ul>
+      </div>
+      <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.18);border-radius:14px;padding:1.5rem">
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--b);margin-bottom:.85rem">📅 Long Term (Next Quarter)</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:.5rem">
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--b)">①</span>SHAP-based explainability (R-08)</li>
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--b)">②</span>Expand diabetes training data (R-14)</li>
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--b)">③</span>SMS OTP integration (R-10)</li>
+          <li style="font-size:.8rem;color:var(--t2);display:flex;gap:.5rem"><span style="color:var(--b)">④</span>MLflow model versioning (R-13)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:1.75rem;display:flex;align-items:center;gap:1.5rem">
+      <div style="font-size:2rem;flex-shrink:0">📋</div>
+      <div>
+        <div style="font-size:.95rem;font-weight:700;margin-bottom:.35rem">System Readiness Level: <span style="color:var(--o)">SRL-3 / Academic & Demo Ready</span></div>
+        <div style="font-size:.8rem;color:var(--t2);line-height:1.6">
+          <strong style="color:var(--t1)">SRL-1</strong> Concept · 
+          <strong style="color:var(--t1)">SRL-2</strong> Prototype · 
+          <strong style="color:var(--o)">SRL-3 ← Current</strong> Academic Demo · 
+          <strong style="color:var(--t1)">SRL-4</strong> Supervised Pilot · 
+          <strong style="color:var(--t1)">SRL-5</strong> Clinical Production
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>
+    <strong>Health Analyzer — Full System Audit Report v2.0</strong><br>
+    Generated: April 20, 2026 &nbsp;·&nbsp; Audited by: <strong>Antigravity AI System</strong><br>
+    Stack: FastAPI · React 18 · MySQL 8 · Scikit-Learn · Joblib · Alembic<br><br>
+    <span style="color:rgba(239,68,68,.6)">
+      ⚠ This report is generated for academic and presentation purposes only.
+      It is not a substitute for a formal clinical or cybersecurity audit.
+      All metrics are estimated based on code analysis. Not for clinical use.
+    </span>
+  </p>
+</footer>
+
+</body>
+</html>

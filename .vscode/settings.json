@@ -1,0 +1,33 @@
+{
+    "git.ignoreLimitWarning": true,
+
+    // ── Python interpreter (venv inside backend/) ──────────────────────────
+    "python.defaultInterpreterPath": "${workspaceFolder}/backend/venv/Scripts/python.exe",
+
+    // ── Pylance / language server ──────────────────────────────────────────
+    "python.languageServer": "Pylance",
+
+    // Tell Pylance where to look for modules.
+    // "backend" is added so that `from src.xxx import ...` resolves correctly,
+    // because src/ lives inside backend/.
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/backend"
+    ],
+
+    // Strict type-checking is optional; "basic" gives useful errors without noise.
+    "python.analysis.typeCheckingMode": "basic",
+
+    // Include the venv site-packages so third-party stubs are found.
+    "python.analysis.venvPath": "${workspaceFolder}/backend",
+    "python.analysis.venv": "venv",
+
+    // ── Terminal / uvicorn ─────────────────────────────────────────────────
+    // When you open a new terminal VS Code will activate the venv automatically.
+    "python.terminal.activateEnvironment": true,
+
+    // PYTHONPATH for the integrated terminal so `uvicorn src.api:app --reload`
+    // works from the backend/ directory without any extra steps.
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}/backend"
+    }
+}

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Health Analyzer Dashboard</title>
+<style>
+    body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f4f6f9;
+        margin: 0;
+        padding: 0;
+    }
+    header {
+        background: #0078D4;
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    .container {
+        width: 90%;
+        max-width: 1100px;
+        margin: 30px auto;
+    }
+    .card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+    h2, h3 {
+        margin-top: 0;
+        color: #333;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 15px;
+    }
+    input {
+        padding: 10px;
+        width: 100%;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    button {
+        margin-top: 15px;
+        padding: 12px;
+        background: #0078D4;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #005fa3;
+    }
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        color: white;
+        font-weight: bold;
+        display: inline-block;
+    }
+    .high { background: #d9534f; }
+    .medium { background: #f0ad4e; }
+    .low { background: #5cb85c; }
+
+    ul {
+        padding-left: 20px;
+    }
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Health Analyzer</h1>
+    <p>AI-Powered Medical Report Analysis & Decision Support</p>
+</header>
+
+<div class="container">
+
+    <!-- INPUT FORM -->
+    <div class="card">
+        <h2>Patient Health Input</h2>
+        <form method="post" action="/analyze">
+            <div class="grid">
+                <input name="Pregnancies" placeholder="Pregnancies">
+                <input name="Glucose" placeholder="Glucose">
+                <input name="BloodPressure" placeholder="Blood Pressure">
+                <input name="SkinThickness" placeholder="Skin Thickness">
+                <input name="Insulin" placeholder="Insulin">
+                <input name="BMI" placeholder="BMI">
+                <input name="DiabetesPedigreeFunction" placeholder="DPF">
+                <input name="Age" placeholder="Age">
+            </div>
+            <button type="submit">Analyze Health Report</button>
+        </form>
+    </div>
+
+    {% if result %}
+    <!-- RESULTS DASHBOARD -->
+    <div class="card">
+        <h2>Analysis Summary</h2>
+        <p><b>Diabetes Prediction:</b> {{ result.diabetes_prediction }}</p>
+
+        <p><b>Overall Risk Level:</b>
+            {% if "High" in result.risk_level %}
+                <span class="badge high">{{ result.risk_level }}</span>
+            {% elif "Medium" in result.risk_level %}
+                <span class="badge medium">{{ result.risk_level }}</span>
+            {% else %}
+                <span class="badge low">{{ result.risk_level }}</span>
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Abnormal Parameters</h3>
+            <ul>
+                {% for a in result.analysis %}
+                <li><b>{{ a[0] }}</b>: {{ a[1] }} – {{ a[2] }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>Possible Conditions</h3>
+            <ul>
+                {% for c in result.possible_conditions %}
+                <li>{{ c }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>Recommended Specialists</h3>
+            <ul>
+                {% for d in result.recommended_specialists %}
+                <li>{{ d }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

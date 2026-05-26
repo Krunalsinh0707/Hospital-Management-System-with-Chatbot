@@ -1,0 +1,10 @@
+{
+  "include": ["backend/src"],
+  "venvPath": "backend",
+  "venv": "venv",
+  "pythonVersion": "3.11",
+  "pythonPlatform": "Windows",
+  "extraPaths": ["backend"],
+  "reportMissingImports": true,
+  "reportMissingModuleSource": false
+}

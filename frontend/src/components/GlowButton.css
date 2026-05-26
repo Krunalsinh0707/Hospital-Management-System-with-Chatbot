@@ -1,0 +1,82 @@
+.glow-button {
+  position: relative;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.05rem;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  overflow: hidden;
+  outline: none;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.glow-button.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.glow-button-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  transition: var(--transition-smooth);
+}
+
+.glow-button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.button-icon {
+  display: flex;
+  align-items: center;
+}
+
+/* Primary Variant */
+.glow-button.primary .glow-button-bg {
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  box-shadow: 0 4px 15px rgba(46, 196, 182, 0.4);
+}
+
+.glow-button.primary:hover:not(.disabled) .glow-button-bg {
+  box-shadow: 0 8px 25px rgba(77, 168, 218, 0.6);
+  filter: brightness(1.1);
+}
+
+/* Outline Variant */
+.glow-button.outline {
+  color: var(--primary-color);
+  border: 1.5px solid var(--primary-color);
+}
+
+.glow-button.outline .glow-button-bg {
+  background: transparent;
+  box-shadow: none;
+}
+
+.glow-button.outline:hover:not(.disabled) {
+  color: #fff;
+  border-color: transparent;
+}
+
+.glow-button.outline:hover:not(.disabled) .glow-button-bg {
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  box-shadow: 0 8px 25px rgba(46, 196, 182, 0.4);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
