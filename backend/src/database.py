@@ -35,6 +35,14 @@ DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAM
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# ✅ SQLAlchemy Session Generator
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 # ✅ ADD THIS (for Alembic compatibility)
 def get_sqlalchemy_engine():
     return engine
@@ -238,13 +246,96 @@ def init_db():
             cursor.execute("ALTER TABLE hypertension_reports ADD COLUMN probability FLOAT NULL")
         print("Table 'hypertension_reports' checked/created.")
 
+        # MODEL REGISTRY TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS model_registry (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                model_name VARCHAR(64) UNIQUE NOT NULL,
+                version VARCHAR(32) NOT NULL DEFAULT '1.0.0',
+                algorithm VARCHAR(64) NOT NULL,
+                accuracy FLOAT NULL,
+                `precision` FLOAT NULL,
+                recall FLOAT NULL,
+                f1_score FLOAT NULL,
+                auc_roc FLOAT NULL,
+                status ENUM('Active', 'Training', 'Deprecated', 'Idle') DEFAULT 'Active',
+                inference_count INT DEFAULT 0,
+                last_trained TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        print("Table 'model_registry' checked/created.")
+
+        # AUDIT LOGS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS audit_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NULL,
+                action VARCHAR(255) NOT NULL,
+                details JSON NULL,
+                ip_address VARCHAR(45) NULL,
+                status VARCHAR(32) DEFAULT 'Success',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                FOREIGN KEY (user_id)
+                    REFERENCES users(id)
+                    ON DELETE SET NULL
+            )
+        """)
+        print("Table 'audit_logs' checked/created.")
+
+        # CHAT CONVERSATIONS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_conversations (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                title VARCHAR(255) DEFAULT 'New Health Conversation',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+                FOREIGN KEY (user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            )
+        """)
+        print("Table 'chat_conversations' checked/created.")
+
+        # CHAT MESSAGES TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                conversation_id INT NOT NULL,
+                sender ENUM('user', 'assistant') NOT NULL,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                FOREIGN KEY (conversation_id)
+                    REFERENCES chat_conversations(id)
+                    ON DELETE CASCADE
+            )
+        """)
+        # CREATE PERFORMANCE INDEXES FOR QUICK FILTERING
+        indexes_to_create = [
+            ("idx_patient_reports_user_created", "patient_reports", "(user_id, created_at)"),
+            ("idx_heart_reports_user_created", "heart_reports", "(user_id, created_at)"),
+            ("idx_hypertension_reports_user_created", "hypertension_reports", "(user_id, created_at)"),
+            ("idx_cbc_reports_user_created", "cbc_reports", "(user_id, created_at)"),
+            ("idx_chat_messages_conv_created", "chat_messages", "(conversation_id, created_at)")
+        ]
+
+        for idx_name, table_name, columns in indexes_to_create:
+            try:
+                cursor.execute(f"CREATE INDEX {idx_name} ON {table_name} {columns}")
+            except Error:
+                pass  # Index already exists or skipped safely
+
         conn.commit()
         conn.close()
 
-        print("✅ Database initialization complete.")
+        print("[OK] Database initialization complete.")
 
     except Error as e:
-        print(f"❌ Database initialization error: {e}")
+        print(f"[ERROR] Database initialization error: {e}")
 
 # =========================
 # Run manually if needed

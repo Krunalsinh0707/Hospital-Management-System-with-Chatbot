@@ -25,7 +25,7 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
-  const { vitals, chartData, telemetry, riskData, insights, loading, error, lastUpdated, refetch } = useDashboard();
+  const { vitals, healthScore, chartData, telemetry, riskData, insights, loading, error, lastUpdated, refetch } = useDashboard();
   const { toggleSidebar } = useLayout();
   const [timeRange, setTimeRange] = useState('Day');
 
@@ -96,9 +96,9 @@ const Dashboard = () => {
             lastUpdated={lastUpdated ? Math.floor((new Date() - lastUpdated) / 1000) : 0}
           />
           <MetricCard 
-            title="Aggregate Risk Score"
-            value={riskData.high > 0 ? "Elevated" : "Nominal"}
-            unit="SCORE"
+            title="Composite Health Score"
+            value={`${healthScore || 100}/100`}
+            unit={healthScore >= 80 ? "Optimal" : healthScore >= 60 ? "Moderate" : "Low"}
             loading={loading && !vitals}
             icon={<ShieldCheck size={20} />}
             sparklineData={getSparkline('glucose').reverse()}
@@ -181,24 +181,56 @@ const Dashboard = () => {
         </div>
 
         {/* 4. ALERT SECTION */}
-        <div className="col-span-12 clinical-card border-l-4 border-l-rose-500 bg-rose-50/30 p-6 flex items-start gap-5">
-          <div className="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
-            <AlertTriangle size={24} />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-[18px] font-bold text-slate-900">Critical Medical Alerts Panel</h3>
-              <span className="px-3 py-1 bg-rose-100 text-rose-700 text-[10px] font-black uppercase rounded-lg">High Severity</span>
-            </div>
-            <p className="text-slate-600 font-medium mb-3">AI Engine has detected 2 high-risk physiological vectors requiring immediate clinical review for Patient ID: 8842-X.</p>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase">
-                <Clock size={14} /> Last Scan: 2m ago
+        {(() => {
+          const highRiskScans = telemetry.filter(t => t.status === 'High Risk');
+          const isHighRisk = highRiskScans.length > 0 || riskData.high > 0;
+          
+          if (isHighRisk) {
+            return (
+              <div className="col-span-12 clinical-card border-l-4 border-l-rose-500 bg-rose-50/30 p-6 flex items-start gap-5">
+                <div className="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                  <AlertTriangle size={24} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-[18px] font-bold text-slate-900">Critical Medical Alerts Panel</h3>
+                    <span className="px-3 py-1 bg-rose-100 text-rose-700 text-[10px] font-black uppercase rounded-lg">High Severity</span>
+                  </div>
+                  <p className="text-slate-600 font-medium mb-3">
+                    AI Engine detected {highRiskScans.length || riskData.high} high-risk physiological vector(s) requiring clinical review ({highRiskScans.map(s => s.scanType).join(', ') || 'Risk Assessment'}).
+                  </p>
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase">
+                      <Clock size={14} /> Last Scan: {highRiskScans[0]?.timestamp || 'Recent'}
+                    </div>
+                    <button onClick={refetch} className="text-[11px] font-black text-rose-600 uppercase hover:underline">Synchronize Records</button>
+                  </div>
+                </div>
               </div>
-              <button className="text-[11px] font-black text-rose-600 uppercase hover:underline">Synchronize Records</button>
-            </div>
-          </div>
-        </div>
+            );
+          } else {
+            return (
+              <div className="col-span-12 clinical-card border-l-4 border-l-emerald-500 bg-emerald-50/30 p-6 flex items-start gap-5">
+                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                  <CheckCircle size={24} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-[18px] font-bold text-slate-900">Physiological Safety Status</h3>
+                    <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase rounded-lg">Nominal</span>
+                  </div>
+                  <p className="text-slate-600 font-medium mb-3">All monitored physiological vectors are operating within normal clinical reference ranges.</p>
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase">
+                      <Clock size={14} /> System Verified: {lastUpdated ? new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Live'}
+                    </div>
+                    <button onClick={refetch} className="text-[11px] font-black text-emerald-600 uppercase hover:underline">Synchronize Records</button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+        })()}
 
         {/* 5. AI INSIGHTS + TABLE */}
         <div className="col-span-12 lg:col-span-6 clinical-card p-6">

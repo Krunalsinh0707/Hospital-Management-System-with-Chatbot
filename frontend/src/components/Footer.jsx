@@ -1,6 +1,7 @@
 import React from 'react';
 import { Share2, Link2, GitBranch } from 'lucide-react';
 import mainLogo from '../assets/logo.png';
+import VERSION_CONFIG from '../config/versionConfig';
 import './Footer.css';
 
 const Footer = () => (
@@ -9,7 +10,7 @@ const Footer = () => (
       {/* Brand */}
       <div className="footer-col brand-col">
         <div className="footer-logo">
-          <img src={mainLogo} alt="Health Analyzer" className="footer-logo-img" />
+          <img src={mainLogo} alt={VERSION_CONFIG.shortName} className="footer-logo-img" />
         </div>
         <p className="footer-tagline">Predictive Healthcare,<br />Zero Gravity Workflow.</p>
         <div className="social-links">
@@ -56,11 +57,12 @@ const Footer = () => (
       </div>
     </div>
 
-    <div className="footer-bottom">
-      <span>© 2025 Health Analyzer. All rights reserved.</span>
-      <span>Built for the future of medicine.</span>
+    <div className="footer-bottom flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-400 text-xs">
+      <span>© {new Date().getFullYear()} {VERSION_CONFIG.shortName}. All rights reserved.</span>
+      <span className="font-semibold text-teal-600/80">v{VERSION_CONFIG.version} ({VERSION_CONFIG.environment})</span>
     </div>
   </footer>
 );
 
 export default Footer;
+

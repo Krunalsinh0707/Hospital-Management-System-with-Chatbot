@@ -15,6 +15,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import { useNotification } from "../context/NotificationContext";
+import VERSION_CONFIG from "../config/versionConfig";
 import "./admin.css";
 
 // --- Mock Data Generator ---
@@ -26,7 +27,7 @@ const MOCK_ALERTS = [
 ];
 
 const MOCK_LOGS = [
-  { user: "Admin (Dr. Aris)", action: "Neural Model v2.4 Re-train", time: "10:15 AM", status: "Completed" },
+  { user: "Admin (Dr. Aris)", action: `Neural Model Re-train (${VERSION_CONFIG.version})`, time: "10:15 AM", status: "Completed" },
   { user: "System", action: "Automated Backup Protocol", time: "09:00 AM", status: "Success" },
   { user: "Admin (Dr. Aris)", action: "Exported Q3 Risk Report", time: "08:45 AM", status: "Success" },
   { user: "Dr. Miller", action: "Accessed Patient Data #8291", time: "07:30 AM", status: "Authorized" }
@@ -123,6 +124,23 @@ const AdminSidebar = () => {
 };
 
 const AdminOverview = ({ patients, metrics, loading, fetchData }) => {
+  const riskCounts = useMemo(() => {
+    let high = 0, moderate = 0, low = 0;
+    (patients || []).forEach(p => {
+      const r = (p.latest_risk_level || 'Low').toLowerCase();
+      if (r.includes('high')) high++;
+      else if (r.includes('mod') || r.includes('medium')) moderate++;
+      else low++;
+    });
+    const total = (patients || []).length || 1;
+    return {
+      high, moderate, low, total,
+      highPct: Math.round((high / total) * 100),
+      modPct: Math.round((moderate / total) * 100),
+      lowPct: Math.round((low / total) * 100)
+    };
+  }, [patients]);
+
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <div className="kpi-grid">
@@ -224,9 +242,9 @@ const AdminOverview = ({ patients, metrics, loading, fetchData }) => {
                 <PieChart>
                   <Pie
                     data={[
-                      { name: 'High', value: 15, color: '#EF4444' },
-                      { name: 'Medium', value: 35, color: '#F59E0B' },
-                      { name: 'Low', value: 50, color: '#10B981' }
+                      { name: 'High', value: riskCounts.high, color: '#EF4444' },
+                      { name: 'Medium', value: riskCounts.moderate, color: '#F59E0B' },
+                      { name: 'Low', value: riskCounts.low, color: '#10B981' }
                     ]}
                     cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value"
                   >
@@ -239,15 +257,15 @@ const AdminOverview = ({ patients, metrics, loading, fetchData }) => {
             <div className="space-y-3 mt-4">
               <div className="flex justify-between items-center text-sm">
                 <span className="flex items-center gap-2"><div className="w-2 h-2 bg-emerald-500 rounded-full" /> Low Risk</span>
-                <span className="font-bold">50%</span>
+                <span className="font-bold">{riskCounts.lowPct}% ({riskCounts.low})</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="flex items-center gap-2"><div className="w-2 h-2 bg-amber-500 rounded-full" /> Moderate Risk</span>
-                <span className="font-bold">35%</span>
+                <span className="font-bold">{riskCounts.modPct}% ({riskCounts.moderate})</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="flex items-center gap-2"><div className="w-2 h-2 bg-rose-500 rounded-full" /> High Risk</span>
-                <span className="font-bold">15%</span>
+                <span className="font-bold">{riskCounts.highPct}% ({riskCounts.high})</span>
               </div>
             </div>
           </div>
@@ -360,15 +378,25 @@ const PatientDirectory = ({ patients }) => {
 };
 
 const ModelMonitoring = () => {
+  const [models, setModels] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get("/admin/models")
+      .then(res => setModels(res.data.models || []))
+      .catch(err => console.error("Failed to fetch models", err))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {MOCK_MODELS.map((model, i) => (
+        {models.map((model, i) => (
           <div key={i} className="admin-card">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h3 className="text-lg font-black text-slate-800">{model.name}</h3>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Version 2.4.1-Stable</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Algorithm: {model.algorithm}</p>
               </div>
               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${model.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
                 {model.status}
@@ -386,19 +414,23 @@ const ModelMonitoring = () => {
                     initial={{ width: 0 }} 
                     animate={{ width: `${model.accuracy}%` }} 
                     className="h-full rounded-full" 
-                    style={{ backgroundColor: model.color }}
+                    style={{ backgroundColor: model.color || '#0F9D8A' }}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="block text-[9px] font-black text-slate-400 uppercase mb-1">Last Trained</span>
-                  <span className="text-sm font-bold text-slate-700">{model.lastTrained}</span>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase mb-1">Precision</span>
+                  <span className="text-xs font-bold text-slate-700">{model.precision}%</span>
                 </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="block text-[9px] font-black text-slate-400 uppercase mb-1">Total Inferences</span>
-                  <span className="text-sm font-bold text-slate-700">12.4k</span>
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase mb-1">Recall</span>
+                  <span className="text-xs font-bold text-slate-700">{model.recall}%</span>
+                </div>
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase mb-1">AUC-ROC</span>
+                  <span className="text-xs font-bold text-slate-700">{model.auc_roc}%</span>
                 </div>
               </div>
             </div>
@@ -407,10 +439,10 @@ const ModelMonitoring = () => {
       </div>
 
       <div className="admin-card">
-        <h3 className="text-lg font-black mb-6">Model Latency Tracking</h3>
+        <h3 className="text-lg font-black mb-6">Model Latency Tracking (ms)</h3>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={[{t: '08:00', l: 45}, {t: '09:00', l: 52}, {t: '10:00', l: 48}, {t: '11:00', l: 60}, {t: '12:00', l: 55}, {t: '13:00', l: 42}]}>
+            <LineChart data={[{t: '08:00', l: 42}, {t: '09:00', l: 38}, {t: '10:00', l: 45}, {t: '11:00', l: 40}, {t: '12:00', l: 41}, {t: '13:00', l: 36}]}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
               <XAxis dataKey="t" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} />
               <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} />
@@ -424,17 +456,27 @@ const ModelMonitoring = () => {
   );
 };
 
-const RiskAlertsCenter = () => {
+const RiskAlertsCenter = ({ patients = [] }) => {
+  const alerts = useMemo(() => {
+    const list = [];
+    patients.forEach(p => {
+      if (p.has_heart) list.push({ id: `ALT-${p.id}-H`, patient: p.full_name, condition: "High Risk Cardiac Vector", severity: "Critical", time: "Recent" });
+      if (p.has_hypertension) list.push({ id: `ALT-${p.id}-HT`, patient: p.full_name, condition: "Hypertension Vector Elevation", severity: "High", time: "Recent" });
+      if (p.has_diabetes) list.push({ id: `ALT-${p.id}-D`, patient: p.full_name, condition: "Elevated Glycemic Risk", severity: "Medium", time: "Recent" });
+    });
+    return list;
+  }, [patients]);
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <div className="admin-card">
         <div className="flex justify-between items-center mb-8">
           <h3 className="text-lg font-black">Active Clinical Alerts</h3>
-          <span className="px-4 py-1.5 bg-rose-50 text-rose-600 rounded-full text-xs font-black uppercase tracking-widest">4 Critical Pending</span>
+          <span className="px-4 py-1.5 bg-rose-50 text-rose-600 rounded-full text-xs font-black uppercase tracking-widest">{alerts.length} Critical Pending</span>
         </div>
         
         <div className="space-y-4">
-          {MOCK_ALERTS.map((alert, i) => (
+          {alerts.map((alert, i) => (
             <div key={i} className={`p-5 rounded-2xl border flex items-center gap-6 transition-all hover:translate-x-1 ${alert.severity === 'Critical' ? 'bg-rose-50/50 border-rose-100' : alert.severity === 'High' ? 'bg-amber-50/50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${alert.severity === 'Critical' ? 'bg-rose-100 text-rose-600' : alert.severity === 'High' ? 'bg-amber-100 text-amber-600' : 'bg-slate-200 text-slate-500'}`}>
                 <AlertTriangle size={24} />
@@ -456,6 +498,12 @@ const RiskAlertsCenter = () => {
               </div>
             </div>
           ))}
+          {alerts.length === 0 && (
+            <div className="py-12 text-center text-slate-400 font-bold">
+              <CheckCircle size={36} className="mx-auto text-emerald-400 mb-2" />
+              <p>No high-risk patient alerts pending triage.</p>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -524,6 +572,16 @@ const DataPipeline = () => {
 };
 
 const AuditLogs = () => {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get("/admin/logs")
+      .then(res => setLogs(res.data.logs || []))
+      .catch(err => console.error("Failed to fetch logs", err))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="admin-card">
@@ -544,12 +602,12 @@ const AuditLogs = () => {
               </tr>
             </thead>
             <tbody>
-              {MOCK_LOGS.map((log, i) => (
+              {logs.map((log, i) => (
                 <tr key={i}>
                   <td>
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-slate-800 rounded flex items-center justify-center text-[10px] font-black text-white">
-                        {log.user.charAt(0)}
+                        {(log.user || 'A').charAt(0)}
                       </div>
                       <span className="text-sm font-bold text-slate-700">{log.user}</span>
                     </div>
@@ -563,6 +621,11 @@ const AuditLogs = () => {
                   </td>
                 </tr>
               ))}
+              {logs.length === 0 && !loading && (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-slate-400 font-bold">No audit logs recorded yet.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -695,7 +758,7 @@ const AdminPage = () => {
             <Route path="/" element={<AdminOverview patients={patients} metrics={metrics} loading={loading} fetchData={fetchData} />} />
             <Route path="/patients" element={<PatientDirectory patients={patients} />} />
             <Route path="/models" element={<ModelMonitoring />} />
-            <Route path="/alerts" element={<RiskAlertsCenter />} />
+            <Route path="/alerts" element={<RiskAlertsCenter patients={patients} />} />
             <Route path="/pipeline" element={<DataPipeline />} />
             <Route path="/logs" element={<AuditLogs />} />
             <Route path="/settings" element={<GlobalSettings />} />

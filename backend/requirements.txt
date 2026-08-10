@@ -17,3 +17,6 @@ sqlalchemy
 pymysql 
 pytesseract
 Pillow
+reportlab
+google-generativeai
+chromadb

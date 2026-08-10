@@ -172,7 +172,7 @@ const Diabetes = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-teal-50/50 rounded-xl border border-teal-100/50">
                     <span className="block text-[9px] font-black text-teal-600 uppercase mb-1">Algorithm</span>
-                    <span className="text-[12px] font-bold text-teal-800 truncate block">Random Forest 2.0</span>
+                    <span className="text-[12px] font-bold text-teal-800 truncate block">{result?.algorithm || "Random Forest Classifier"}</span>
                   </div>
                   <div className="p-4 bg-purple-50/50 rounded-xl border border-purple-100/50">
                     <span className="block text-[9px] font-black text-purple-600 uppercase mb-1">Analysis ID</span>

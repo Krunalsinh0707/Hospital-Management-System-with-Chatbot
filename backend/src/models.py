@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, JSON, DateTime, ForeignKey, Enum, Text
+from sqlalchemy import Column, Integer, String, Float, JSON, DateTime, ForeignKey, Enum, Text, Boolean
 from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.sql import func
 import datetime
@@ -76,3 +76,70 @@ class VerificationCode(Base):
     is_verified = Column(Integer, default=0)
     expires_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class ModelRegistry(Base):
+    __tablename__ = "model_registry"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    model_name = Column(String(64), unique=True, nullable=False)
+    version = Column(String(32), nullable=False, default="1.0.0")
+    algorithm = Column(String(64), nullable=False)
+    accuracy = Column(Float, nullable=True)
+    precision = Column(Float, nullable=True)
+    recall = Column(Float, nullable=True)
+    f1_score = Column(Float, nullable=True)
+    auc_roc = Column(Float, nullable=True)
+    status = Column(Enum('Active', 'Training', 'Deprecated', 'Idle'), default='Active')
+    inference_count = Column(Integer, default=0)
+    last_trained = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    action = Column(String(255), nullable=False)
+    details = Column(JSON, nullable=True)
+    ip_address = Column(String(45), nullable=True)
+    status = Column(String(32), default="Success")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class ChatConversation(Base):
+    __tablename__ = "chat_conversations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), default="New Health Conversation")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(Integer, ForeignKey("chat_conversations.id", ondelete="CASCADE"), nullable=False)
+    sender = Column(Enum('user', 'assistant'), nullable=False)
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class PasswordResetOTP(Base):
+    __tablename__ = "password_reset_otp"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(255), index=True, nullable=False)
+    otp = Column(String(255), nullable=False)
+    attempts = Column(Integer, default=0, nullable=False)
+    verified = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(String(255), nullable=True)
+
+
+

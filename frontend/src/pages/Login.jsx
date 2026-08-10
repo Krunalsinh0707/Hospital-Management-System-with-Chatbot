@@ -6,6 +6,7 @@ import { useNotification } from "../context/NotificationContext";
 import FloatingCard from '../components/FloatingCard';
 import { Mail, Lock, AlertCircle, ShieldCheck, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import mainLogo from '../assets/logo.png';
+import VERSION_CONFIG from '../config/versionConfig';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,7 +14,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const { showNotification } = useNotification();
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const Login = () => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    
+
     try {
       const success = await login(email, password);
       if (success) {
@@ -46,19 +47,19 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-white flex overflow-hidden">
       {/* Left Side: Hero Image & Branding */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="hidden lg:flex lg:w-1/2 relative bg-slate-900"
       >
-        <img 
-          src="/src/assets/login_hero.png" 
-          alt="Clinical Environment" 
+        <img
+          src="/src/assets/login_hero.png"
+          alt="Clinical Environment"
           className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity"
         />
         <div className="absolute inset-0 bg-gradient-to-tr from-[#0F9D8A]/40 to-transparent pointer-events-none" />
-        
+
         <div className="relative z-10 p-16 flex flex-col justify-between h-full w-full">
           <div>
             <div className="flex items-center gap-3 mb-8">
@@ -67,7 +68,7 @@ const Login = () => {
               </div>
               <span className="text-xl font-black text-white uppercase tracking-tighter">Health Analyzer</span>
             </div>
-            
+
             <h2 className="text-5xl font-black text-white leading-tight mb-6">
               Precision AI for <br />
               <span className="text-[#0F9D8A]">Clinical Decision</span> <br />
@@ -77,7 +78,7 @@ const Login = () => {
               Access the neural diagnostic network and analyze patient data with state-of-the-art machine learning models.
             </p>
           </div>
-          
+
           <div className="flex gap-8 items-center border-t border-white/10 pt-8">
             <div className="flex flex-col">
               <span className="text-2xl font-black text-white">99.8%</span>
@@ -97,14 +98,14 @@ const Login = () => {
 
       {/* Right Side: Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-slate-50/50">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="w-full max-w-md"
         >
           <div className="text-center mb-10 lg:hidden">
-             <div className="w-16 h-16 bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center justify-center mx-auto mb-4 text-[#0F9D8A]">
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center justify-center mx-auto mb-4 text-[#0F9D8A]">
               <ShieldCheck size={32} />
             </div>
             <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Clinical Gateway</h1>
@@ -122,15 +123,15 @@ const Login = () => {
                   <AlertCircle size={16} /> {error}
                 </div>
               )}
-              
+
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block ml-1">Clinical ID / Email</label>
                 <div className="relative group">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#0F9D8A] transition-colors" size={20} />
-                  <input 
-                    type="text" 
-                    required 
-                    value={email} 
+                  <input
+                    type="text"
+                    required
+                    value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-teal-500/5 focus:border-[#0F9D8A] transition-all"
                     placeholder="doctor@healthanalyzer.ai"
@@ -141,14 +142,14 @@ const Login = () => {
               <div className="space-y-2">
                 <div className="flex justify-between items-center ml-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Secure Passcode</label>
-                  <Link to="/forgot-password" size={14} className="text-[9px] font-black text-[#0F9D8A] uppercase hover:underline tracking-wider">Recovery Key?</Link>
+                  <Link to="/forgot-password" className="text-[10px] font-black text-[#0F9D8A] uppercase hover:underline tracking-wider">Forgot Password?</Link>
                 </div>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#0F9D8A] transition-colors" size={20} />
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    required 
-                    value={password} 
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-12 pr-12 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-teal-500/5 focus:border-[#0F9D8A] transition-all"
                     placeholder="••••••••"
@@ -163,8 +164,8 @@ const Login = () => {
                 </div>
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isLoading}
                 className="w-full bg-slate-900 hover:bg-black text-white font-black uppercase tracking-widest py-5 rounded-2xl shadow-xl shadow-slate-900/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
               >
@@ -175,7 +176,7 @@ const Login = () => {
                 )}
               </button>
             </form>
-            
+
             <div className="mt-10 pt-8 border-t border-slate-50 text-center">
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                 New Practitioner? <Link to="/register" className="text-[#0F9D8A] hover:underline">Request Network Access</Link>
@@ -184,7 +185,7 @@ const Login = () => {
           </div>
 
           <div className="mt-10 text-center">
-            <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">Health Analyzer Clinical Network v2.0</p>
+            <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">{VERSION_CONFIG.organization} v{VERSION_CONFIG.version}</p>
           </div>
         </motion.div>
       </div>

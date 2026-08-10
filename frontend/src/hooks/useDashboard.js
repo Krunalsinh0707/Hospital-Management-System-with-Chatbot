@@ -3,6 +3,7 @@ import { dashboardService } from '../services/dashboardService';
 
 export const useDashboard = () => {
   const [vitals, setVitals] = useState(null);
+  const [healthScore, setHealthScore] = useState(100);
   const [chartData, setChartData] = useState([]);
   const [telemetry, setTelemetry] = useState([]);
   const [riskData, setRiskData] = useState({ low: 0, moderate: 0, high: 0 });
@@ -78,7 +79,7 @@ export const useDashboard = () => {
         },
         bloodPressure: {
           systolic: hLatest.trestbps || dLatest.blood_pressure || '---',
-          diastolic: 80, // Simulation, since only systolic is prominently tracked in heart model
+          diastolic: (hLatest.trestbps || dLatest.blood_pressure) ? Math.round((hLatest.trestbps || dLatest.blood_pressure) * 0.67) : '---',
           unit: 'mmHg',
           status: (hLatest.trestbps >= 140 || dLatest.blood_pressure >= 140) ? 'high' : 'normal'
         },
@@ -93,6 +94,18 @@ export const useDashboard = () => {
           severity: cbcSeverity
         }
       });
+
+      // Composite Health Score Calculation
+      let calcHealthScore = 100;
+      if (dLatest.glucose > 140) calcHealthScore -= 15;
+      else if (dLatest.glucose > 100) calcHealthScore -= 8;
+      if (hLatest.trestbps > 140 || dLatest.blood_pressure > 140) calcHealthScore -= 15;
+      else if (hLatest.trestbps > 130) calcHealthScore -= 8;
+      if (hLatest.prediction?.toString().toLowerCase().includes('high')) calcHealthScore -= 20;
+      if (htnLatest.prediction?.toString().toLowerCase().includes('high')) calcHealthScore -= 15;
+      calcHealthScore -= cbcFlags * 8;
+      const finalHealthScore = Math.max(0, Math.min(100, calcHealthScore));
+      setHealthScore(finalHealthScore);
 
       // --- 2. TRAJECTORY CHART (GLUCOSE VS BP) ---
       // We take the last 7 diabetes records as they conveniently have BOTH glucose and BP stored
@@ -177,6 +190,7 @@ export const useDashboard = () => {
 
   return { 
     vitals, 
+    healthScore,
     chartData, 
     telemetry, 
     riskData, 

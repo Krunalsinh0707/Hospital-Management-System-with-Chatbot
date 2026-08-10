@@ -7,6 +7,7 @@ import api from '../services/api';
 import { useReports } from '../context/ReportContext';
 import ClinicalHeader from '../components/ClinicalHeader';
 import ClinicalAdvice from '../components/ClinicalAdvice';
+import VERSION_CONFIG from '../config/versionConfig';
 import { useLayout } from '../App';
 
 const iconsMap = {
@@ -227,7 +228,7 @@ const Heart = () => {
                     <Download size={16} /> Export Analysis
                   </button>
                   <p className="text-[9px] font-bold text-slate-400 uppercase mt-3">
-                    Verified by Clinical AI v2.0.4
+                    Verified by {VERSION_CONFIG.shortName} Decision Engine
                   </p>
                 </div>
               </motion.div>

@@ -7,12 +7,32 @@ import FloatingCard from '../components/FloatingCard';
 import { useReports } from '../context/ReportContext';
 import ClinicalHeader from '../components/ClinicalHeader';
 import { useLayout } from '../App';
+import api from '../services/api';
 
 const History = () => {
   const { reports, loading, error } = useReports();
   const { toggleSidebar } = useLayout();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All');
+  const [downloadingId, setDownloadingId] = useState(null);
+
+  const downloadPdf = async (type, id) => {
+    setDownloadingId(id);
+    try {
+      const response = await api.get(`/reports/pdf/${type}/${id}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${type}_report_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("PDF download failed", err);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const filteredDocs = reports.filter(doc => {
     const matchesSearch = 
@@ -142,8 +162,13 @@ const History = () => {
                                 <button className="p-2 text-slate-400 hover:text-[#0F9D8A] hover:bg-teal-50 rounded-lg transition-all" title="View Details">
                                   <Eye size={16} />
                                 </button>
-                                <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all" title="Download Report">
-                                  <Download size={16} />
+                                <button 
+                                  onClick={() => downloadPdf(doc.type, doc.id)} 
+                                  disabled={downloadingId === doc.id}
+                                  className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all" 
+                                  title="Download PDF Clinical Report"
+                                >
+                                  <Download size={16} className={downloadingId === doc.id ? 'animate-bounce text-[#0F9D8A]' : ''} />
                                 </button>
                               </div>
                             </td>
