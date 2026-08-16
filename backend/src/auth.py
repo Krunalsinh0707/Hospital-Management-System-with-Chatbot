@@ -70,9 +70,18 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return token_data
 
 async def get_current_admin(current_user: TokenData = Depends(get_current_user)):
-    if current_user.role != "admin":
+    if current_user.role not in ["admin", "hospital_admin", "department_admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin privileges required"
         )
     return current_user
+
+async def get_current_doctor(current_user: TokenData = Depends(get_current_user)):
+    if current_user.role not in ["doctor", "emergency_doctor", "admin", "hospital_admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Doctor authorization required"
+        )
+    return current_user
+

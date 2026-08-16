@@ -24,7 +24,16 @@ from src.routers import (
     cbc_router,
     admin_router,
     chatbot_router,
-    password_reset
+    password_reset,
+    departments_router,
+    doctors_router,
+    appointments_router,
+    medical_reports_router,
+    emergency_router,
+    communication_router,
+    analytics_router,
+    notifications_router,
+    model_registry_router
 )
 
 def create_default_admin():
@@ -39,7 +48,7 @@ def create_default_admin():
                 blood_group="O+",
                 password_hash=hashed_password,
                 full_name="System Admin",
-                role="admin"
+                role="hospital_admin"
             )
             db.add(new_admin)
             db.commit()
@@ -100,6 +109,15 @@ app.include_router(cbc_router.router)
 app.include_router(admin_router.router)
 app.include_router(chatbot_router.router)
 app.include_router(password_reset.router)
+app.include_router(departments_router.router)
+app.include_router(doctors_router.router)
+app.include_router(appointments_router.router)
+app.include_router(medical_reports_router.router)
+app.include_router(emergency_router.router)
+app.include_router(communication_router.router)
+app.include_router(analytics_router.router)
+app.include_router(notifications_router.router)
+app.include_router(model_registry_router.router)
 
 # ---------------- BASIC ROOT ROUTE ----------------
 @app.get("/")

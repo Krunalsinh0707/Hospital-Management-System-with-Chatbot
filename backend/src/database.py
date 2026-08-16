@@ -108,13 +108,18 @@ def init_db():
                 blood_group VARCHAR(5) NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
                 full_name VARCHAR(255) NOT NULL,
-                role ENUM('user', 'admin') DEFAULT 'user',
+                role ENUM('user', 'admin', 'patient', 'doctor', 'department_admin', 'hospital_admin', 'emergency_doctor') DEFAULT 'patient',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     ON UPDATE CURRENT_TIMESTAMP
             )
         """)
         print("Table 'users' checked/created.")
+
+        try:
+            cursor.execute("ALTER TABLE users MODIFY COLUMN role ENUM('user', 'admin', 'patient', 'doctor', 'department_admin', 'hospital_admin', 'emergency_doctor') DEFAULT 'patient'")
+        except Exception:
+            pass
 
         if not _column_exists(cursor, "users", "mobile_no"):
             cursor.execute("ALTER TABLE users ADD COLUMN mobile_no VARCHAR(20) UNIQUE NULL")
@@ -328,6 +333,34 @@ def init_db():
                 cursor.execute(f"CREATE INDEX {idx_name} ON {table_name} {columns}")
             except Error:
                 pass  # Index already exists or skipped safely
+
+        # DEPARTMENTS SEEDING
+        default_departments = [
+            ("Cardiology", "CARD", "Heart, vascular, and circulatory condition diagnostic and therapeutic care."),
+            ("Oncology", "ONCO", "Cancer detection, tumor assessment, and targeted oncological therapy."),
+            ("Orthopedics", "ORTHO", "Bone, joint, spine, and musculoskeletal system disorders."),
+            ("Neurology", "NEURO", "Brain, nervous system, stroke, and neuromuscular disorder care."),
+            ("Pulmonology", "PULMO", "Lungs, respiratory tract, and breathing conditions."),
+            ("Endocrinology", "ENDO", "Hormones, metabolism, diabetes, and endocrine gland disorders."),
+            ("Gastroenterology", "GASTRO", "Digestive system, liver, and gastrointestinal conditions."),
+            ("Hematology", "HEMA", "Blood disorders, CBC analysis, and bone marrow conditions."),
+            ("Nephrology", "NEPHRO", "Kidney diseases, renal function, and fluid balance."),
+            ("Dermatology", "DERM", "Skin, hair, nails, and cutaneous pathology."),
+            ("Pediatrics", "PEDI", "Infant, child, and adolescent specialized medical care."),
+            ("Gynecology", "GYNE", "Women's reproductive health and maternal care."),
+            ("General Medicine", "GENMED", "Comprehensive primary internal medicine and overall wellness."),
+            ("Emergency", "EMERG", "Critical care, urgent triage, and emergency medical response.")
+        ]
+
+        try:
+            cursor.execute("SELECT COUNT(*) FROM departments")
+            dept_count = cursor.fetchone()[0]
+            if dept_count == 0:
+                for name, code, desc in default_departments:
+                    cursor.execute("INSERT INTO departments (name, code, description) VALUES (%s, %s, %s)", (name, code, desc))
+                print("Default medical departments seeded.")
+        except Exception as e:
+            print(f"Department seed warning: {e}")
 
         conn.commit()
         conn.close()

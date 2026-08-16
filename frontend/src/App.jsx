@@ -28,6 +28,16 @@ const AdminPage = lazy(() => import('./pages/AdminPage'));
 const MLStudio = lazy(() => import('./pages/MLStudio'));
 
 
+const PatientDashboard = lazy(() => import('./pages/patient/PatientDashboard'));
+const MyReports = lazy(() => import('./pages/patient/MyReports'));
+const Appointments = lazy(() => import('./pages/patient/Appointments'));
+const EmergencyPage = lazy(() => import('./pages/patient/EmergencyPage'));
+const DoctorDashboard = lazy(() => import('./pages/doctor/DoctorDashboard'));
+const DoctorReports = lazy(() => import('./pages/doctor/DoctorReports'));
+const DepartmentsPage = lazy(() => import('./pages/departments/DepartmentsPage'));
+const AIModelsPage = lazy(() => import('./pages/patient/AIModelsPage'));
+const OwnReportFlow = lazy(() => import('./pages/patient/OwnReportFlow'));
+
 const LayoutContext = createContext();
 export const useLayout = () => useContext(LayoutContext);
 
@@ -40,10 +50,14 @@ const ProtectedRoute = ({ children }) => {
 
 const DashboardRedirect = () => {
   const { user } = useAuth();
-  if (user?.role === 'admin') {
+  const role = user?.role;
+  if (role === 'admin' || role === 'hospital_admin') {
     return <Navigate to="/admin" replace />;
   }
-  return <Dashboard />;
+  if (role === 'doctor' || role === 'emergency_doctor') {
+    return <Navigate to="/doctor/dashboard" replace />;
+  }
+  return <PatientDashboard />;
 };
 
 const DashboardLayout = ({ children }) => {
@@ -103,7 +117,21 @@ function App() {
               <Route path="/verify-otp" element={<VerifyOTP />} />
               <Route path="/reset-password" element={<ResetPassword />} />
 
+              {/* Core Dashboards */}
               <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><DashboardRedirect /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/my-reports" element={<ProtectedRoute><DashboardLayout><MyReports /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/own-report" element={<ProtectedRoute><DashboardLayout><OwnReportFlow /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/ai-models" element={<ProtectedRoute><DashboardLayout><AIModelsPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/appointments" element={<ProtectedRoute><DashboardLayout><Appointments /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/emergency" element={<ProtectedRoute><DashboardLayout><EmergencyPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/departments" element={<ProtectedRoute><DashboardLayout><DepartmentsPage /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/departments/:deptSlug" element={<ProtectedRoute><DashboardLayout><DepartmentsPage /></DashboardLayout></ProtectedRoute>} />
+
+              {/* Doctor Routes */}
+              <Route path="/doctor/dashboard" element={<ProtectedRoute><DashboardLayout><DoctorDashboard /></DashboardLayout></ProtectedRoute>} />
+              <Route path="/doctor/reports" element={<ProtectedRoute><DashboardLayout><DoctorReports /></DashboardLayout></ProtectedRoute>} />
+
+              {/* Extensible Disease Models */}
               <Route path="/diabetes" element={<ProtectedRoute><DashboardLayout><Diabetes /></DashboardLayout></ProtectedRoute>} />
               <Route path="/heart" element={<ProtectedRoute><DashboardLayout><Heart /></DashboardLayout></ProtectedRoute>} />
               <Route path="/hypertension" element={<ProtectedRoute><DashboardLayout><Hypertension /></DashboardLayout></ProtectedRoute>} />
