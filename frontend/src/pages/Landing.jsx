@@ -88,7 +88,7 @@ const Landing = () => {
           <img src={mainLogo} alt="Health Analyzer" className="main-logo-img" />
           <div className="brand-text hidden sm:block">
             <h2 className="text-sm font-black tracking-tight text-slate-900 uppercase">HEALTH ANALYZER</h2>
-            <p className="text-[9px] font-bold text-[#0F9D8A] uppercase tracking-widest leading-none">Intelligent Healthcare Platform</p>
+            <p className="text-xs font-semibold text-[#0F9D8A] leading-tight">Intelligent Healthcare Platform</p>
           </div>
         </div>
 
@@ -102,7 +102,7 @@ const Landing = () => {
         </div>
 
         <div className="nav-actions hidden sm:flex items-center gap-3">
-          <GlowButton variant="outline" onClick={() => navigate('/login')}>Login</GlowButton>
+          <GlowButton variant="outline" onClick={() => navigate('/patient/login')}>Sign In</GlowButton>
           <GlowButton onClick={() => navigate('/register')}>Get Started</GlowButton>
         </div>
 
@@ -122,7 +122,7 @@ const Landing = () => {
             <a href="#departments" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-slate-700">Departments</a>
             <a href="#emergency" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-slate-700">Emergency</a>
             <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
-              <button onClick={() => navigate('/login')} className="w-full py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900">Login</button>
+              <button onClick={() => navigate('/patient/login')} className="w-full py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900">Sign In</button>
               <button onClick={() => navigate('/register')} className="w-full py-2.5 rounded-xl bg-[#0F9D8A] text-white text-xs font-bold">Get Started</button>
             </div>
           </div>
@@ -130,15 +130,21 @@ const Landing = () => {
       </nav>
 
       {/* ── 1. HERO SECTION ── */}
-      <section className="hero max-w-7xl mx-auto px-6 py-12 lg:py-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center" id="hero">
+      <section className="hero relative max-w-7xl mx-auto px-6 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center" id="hero">
+        {/* Ambient connecting glow to eliminate dead whitespace */}
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[300px] bg-teal-100/30 rounded-full blur-3xl pointer-events-none -z-10" 
+          aria-hidden="true" 
+        />
+
         <motion.div
-          className="hero-content space-y-6"
+          className="hero-content lg:col-span-7 space-y-6"
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-[#0F9D8A] border border-teal-100 text-xs font-black uppercase tracking-wider">
-            <ShieldCheck size={16} /> YOUR HEALTH, OUR PRIORITY
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-[#0F9D8A] border border-teal-100 text-xs font-bold">
+            <ShieldCheck size={16} /> Smart Medical Intelligence Platform
           </div>
           
           <h1 className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.15]">
@@ -150,7 +156,7 @@ const Landing = () => {
             Health Analyzer combines hospital management, digital medical records, intelligent report analysis, AI-powered pre-analysis, and doctor decision support into one connected healthcare platform.
           </p>
 
-          <div className="flex flex-wrap gap-3 text-xs font-extrabold text-slate-700">
+          <div className="flex flex-wrap gap-3 text-xs font-bold text-slate-700">
             <div className="flex items-center gap-2 bg-slate-100/80 border border-slate-200 px-3.5 py-2 rounded-xl">
               <Check size={16} className="text-[#0F9D8A]" />
               <span>Digital Medical Records</span>
@@ -169,15 +175,15 @@ const Landing = () => {
             <GlowButton onClick={() => navigate('/register')} className="hero-btn shadow-lg shadow-teal-600/20">
               GET STARTED <ArrowRight size={18} />
             </GlowButton>
-            <GlowButton variant="outline" className="hero-btn" onClick={() => navigate('/login')}>
-              EXPLORE PLATFORM
+            <GlowButton variant="outline" className="hero-btn" onClick={() => navigate('/patient/login')}>
+              PATIENT SIGN IN
             </GlowButton>
           </div>
         </motion.div>
 
         {/* HERO RIGHT: REAL GENERATED MEDICAL PHOTOGRAPH */}
         <motion.div
-          className="hero-visual relative"
+          className="hero-visual lg:col-span-5 relative"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -204,12 +210,12 @@ const Landing = () => {
                 <Cpu size={22} />
               </div>
               <div>
-                <span className="text-[9px] font-black text-[#0F9D8A] uppercase tracking-widest">AI HEALTHCARE</span>
-                <h4 className="text-xs font-black text-slate-900">Smart Medical Intelligence</h4>
-                <p className="text-[10px] font-semibold text-slate-400">Report Analysis ✓ • Doctor Review ✓</p>
+                <span className="text-xs font-bold text-[#0F9D8A] uppercase tracking-wider">AI DIAGNOSTIC ENGINE</span>
+                <p className="text-xs font-bold text-slate-900">Real-Time Clinical Analysis Active</p>
+                <p className="text-xs font-medium text-slate-500">Doctor Decision Support ✓</p>
               </div>
             </div>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping shrink-0" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping shrink-0" aria-hidden="true" />
           </motion.div>
         </motion.div>
       </section>
@@ -218,11 +224,11 @@ const Landing = () => {
       <section className="section py-8 max-w-7xl mx-auto px-6" id="features">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[
-            { icon: <FileText size={24} className="text-[#0F9D8A]" />, title: 'DIGITAL MEDICAL RECORDS', desc: 'Store & manage reports digitally.' },
-            { icon: <Cpu size={24} className="text-indigo-600" />, title: 'AI PRE-ANALYSIS', desc: 'Pre-screen reports before doctor review.' },
-            { icon: <Calendar size={24} className="text-purple-600" />, title: 'APPOINTMENTS', desc: 'Book consultations with specialists.' },
-            { icon: <MessageSquare size={24} className="text-emerald-600" />, title: 'DOCTOR COMMUNICATION', desc: 'Direct patient-physician messaging.' },
-            { icon: <AlertOctagon size={24} className="text-rose-600" />, title: 'EMERGENCY CARE', desc: 'Instant emergency queue triage.' },
+            { icon: <FileText size={24} className="text-[#0F9D8A]" />, title: 'Digital Medical Records', desc: 'Store & manage reports digitally.' },
+            { icon: <Cpu size={24} className="text-indigo-600" />, title: 'AI Pre-Analysis', desc: 'Pre-screen reports before doctor review.' },
+            { icon: <Calendar size={24} className="text-purple-600" />, title: 'Appointments', desc: 'Book consultations with specialists.' },
+            { icon: <MessageSquare size={24} className="text-emerald-600" />, title: 'Doctor Communication', desc: 'Direct patient-physician messaging.' },
+            { icon: <AlertOctagon size={24} className="text-rose-600" />, title: 'Emergency Care', desc: 'Instant emergency queue triage.' },
           ].map((card, i) => (
             <motion.div
               key={i}
@@ -233,8 +239,8 @@ const Landing = () => {
                 {card.icon}
               </div>
               <div>
-                <h3 className="text-xs font-black text-slate-900 tracking-tight">{card.title}</h3>
-                <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-1">{card.desc}</p>
+                <h3 className="text-xs font-bold text-slate-900 tracking-tight">{card.title}</h3>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed mt-1">{card.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -255,21 +261,21 @@ const Landing = () => {
           />
 
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-[#0F9D8A] text-xs font-black uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-[#0F9D8A] text-xs font-bold uppercase tracking-wider">
               <FileCheck size={16} /> DIGITAL REPORT ARCHITECTURE
             </div>
             
             <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              YOUR MEDICAL REPORTS.<br />
-              <span className="text-[#0F9D8A]">DIGITALLY ORGANIZED.</span>
+              Your Medical Reports.<br />
+              <span className="text-[#0F9D8A]">Digitally Organized.</span>
             </h2>
 
-            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+            <p className="text-sm text-slate-600 leading-relaxed">
               Hospital-generated reports and existing reports from other hospitals can be stored, processed, and managed digitally in one unified record portal.
             </p>
 
             <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-3 shadow-sm">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Automated Medical Record Pipeline</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Automated Medical Record Pipeline</span>
               <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-800">
                 <span className="px-2.5 py-1 rounded-lg bg-teal-50 text-[#0F9D8A]">Hospital Report / Existing Report</span>
                 <ChevronRight size={14} className="text-slate-400" />
@@ -299,24 +305,24 @@ const Landing = () => {
         <div className="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden shadow-2xl space-y-8">
           <div className="absolute right-0 top-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="text-center max-w-2xl mx-auto space-y-3 relative z-10">
-            <span className="text-[10px] font-black uppercase tracking-widest text-teal-300 bg-teal-500/20 px-3 py-1 rounded-full border border-teal-500/30">
-              PATIENT WORKFLOW ENTRY POINT
+          <div className="text-left max-w-2xl space-y-3 relative z-10">
+            <span className="text-xs font-bold uppercase tracking-wider text-teal-300 bg-teal-500/20 px-3 py-1 rounded-full border border-teal-500/30 inline-block">
+              Patient Workflow Entry Point
             </span>
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">ALREADY HAVE A MEDICAL REPORT?</h2>
-            <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Already Have a Medical Report?</h2>
+            <p className="text-sm text-slate-300 leading-relaxed">
               Upload a report from another hospital or laboratory, or manually enter the relevant medical parameters for instant AI pre-analysis and doctor review.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl relative z-10">
             {/* Upload Card */}
             <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/15 hover:border-teal-400 transition-all space-y-4 flex flex-col justify-between">
               <div className="space-y-2">
                 <div className="w-12 h-12 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center font-bold">
                   <Upload size={24} />
                 </div>
-                <h3 className="text-lg font-black text-white">UPLOAD REPORT</h3>
+                <h3 className="text-lg font-black text-white">Upload Report</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
                   Support for PDF, JPG, JPEG, PNG formats. Automated OCR extracts available medical parameters automatically.
                 </p>
@@ -325,7 +331,7 @@ const Landing = () => {
                 onClick={() => navigate('/own-report')}
                 className="w-full py-3.5 bg-[#0F9D8A] hover:bg-teal-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
               >
-                <span>[ UPLOAD REPORT ]</span>
+                <span>Upload Report</span>
                 <ArrowRight size={16} />
               </button>
             </div>
@@ -336,7 +342,7 @@ const Landing = () => {
                 <div className="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center font-bold">
                   <FileSpreadsheet size={24} />
                 </div>
-                <h3 className="text-lg font-black text-white">ENTER MANUALLY</h3>
+                <h3 className="text-lg font-black text-white">Enter Manually</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
                   Select your medical department and enter only the relevant medical parameters required for screening.
                 </p>
@@ -345,7 +351,7 @@ const Landing = () => {
                 onClick={() => navigate('/own-report')}
                 className="w-full py-3.5 bg-white text-slate-900 hover:bg-slate-100 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
               >
-                <span>[ ENTER INFORMATION ]</span>
+                <span>Enter Information Manually</span>
                 <ArrowRight size={16} />
               </button>
             </div>
@@ -357,7 +363,7 @@ const Landing = () => {
       <Section className="section max-w-7xl mx-auto px-6 py-12" id="ai-intelligence">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-12">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-[#0F9D8A] text-xs font-black uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-[#0F9D8A] text-xs font-bold uppercase tracking-wider">
               <Sparkles size={16} /> EXTENDABLE HEALTHCARE ECOSYSTEM
             </div>
             
@@ -366,18 +372,18 @@ const Landing = () => {
               <span className="text-[#0F9D8A]">Expandable Medical Intelligence</span>
             </h2>
 
-            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+            <p className="text-sm text-slate-600 leading-relaxed">
               Health Analyzer is designed around an extensible medical AI architecture that grows across multiple medical specialties, clinical risk indicators, and doctor decision-support models.
             </p>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm space-y-1">
-                <span className="text-xs font-black text-slate-900">Multi-Model Framework</span>
-                <p className="text-[11px] text-slate-500">Dynamic model loading & department routing</p>
+                <span className="text-xs font-bold text-slate-900">Multi-Model Framework</span>
+                <p className="text-xs text-slate-600">Dynamic model loading & department routing</p>
               </div>
               <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm space-y-1">
-                <span className="text-xs font-black text-slate-900">Doctor Decision Support</span>
-                <p className="text-[11px] text-slate-500">Risk probabilities paired with doctor reviews</p>
+                <span className="text-xs font-bold text-slate-900">Doctor Decision Support</span>
+                <p className="text-xs text-slate-600">Risk probabilities paired with doctor reviews</p>
               </div>
             </div>
 
@@ -405,11 +411,11 @@ const Landing = () => {
       {/* ── 6. MEDICAL DEPARTMENTS SECTION ── */}
       <Section className="section max-w-7xl mx-auto px-6 py-12" id="departments">
         <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#0F9D8A] bg-teal-50 px-3 py-1 rounded-full border border-teal-100">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#0F9D8A] bg-teal-50 px-3 py-1 rounded-full border border-teal-100">
             CLINICAL SPECIALTIES
           </span>
           <h2 className="text-3xl font-extrabold text-slate-900">OUR MEDICAL DEPARTMENTS</h2>
-          <p className="text-xs md:text-sm text-slate-500">
+          <p className="text-sm text-slate-500">
             Connected medical services and specialized AI decision support across departments.
           </p>
         </div>
@@ -446,9 +452,11 @@ const Landing = () => {
                   <p className="text-xs text-slate-500 font-medium leading-relaxed">{dept.desc}</p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0F9D8A]">
-                  <span>View Department</span>
-                  <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
+                <div className="pt-3 border-t border-slate-100">
+                  <span className="w-full py-2.5 px-3.5 rounded-xl bg-slate-50 group-hover:bg-teal-50 text-slate-700 group-hover:text-[#0F9D8A] text-xs font-bold flex items-center justify-between transition-all duration-200">
+                    <span>View Department</span>
+                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                  </span>
                 </div>
               </div>
             </motion.div>
@@ -470,7 +478,7 @@ const Landing = () => {
           />
 
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-[#0F9D8A] text-xs font-black uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-[#0F9D8A] text-xs font-bold uppercase tracking-wider">
               <Users size={16} /> PATIENT-DOCTOR CARE
             </div>
             
@@ -479,7 +487,7 @@ const Landing = () => {
               <span className="text-[#0F9D8A]">BETTER CARE.</span>
             </h2>
 
-            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+            <p className="text-sm text-slate-600 leading-relaxed">
               Patients select their department, connect with authorized doctors, book appointments, and maintain ongoing care communication in one secure portal.
             </p>
 
@@ -503,13 +511,13 @@ const Landing = () => {
         <div className="bg-rose-50 border border-rose-200 rounded-3xl p-8 md:p-12 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div className="space-y-4">
-              <span className="text-[10px] font-black uppercase tracking-widest text-rose-700 bg-rose-100 px-3 py-1 rounded-full border border-rose-200">
+              <span className="text-xs font-bold uppercase tracking-wider text-rose-700 bg-rose-100 px-3 py-1 rounded-full border border-rose-200">
                 PRIORITY CARE RESPONSE
               </span>
               <h2 className="text-2xl md:text-3xl font-extrabold text-rose-950">
                 EMERGENCY SUPPORT WHEN IT MATTERS
               </h2>
-              <p className="text-xs md:text-sm text-rose-800 max-w-xl leading-relaxed">
+              <p className="text-sm text-rose-800 max-w-xl leading-relaxed">
                 Send an immediate emergency request that enters the priority triage queue for urgent review by authorized emergency physicians.
               </p>
 
@@ -525,7 +533,7 @@ const Landing = () => {
 
               <button
                 onClick={() => navigate('/emergency')}
-                className="px-6 py-4 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-rose-900/20 flex items-center gap-2"
+                className="px-6 py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-rose-900/20 flex items-center gap-2"
               >
                 <AlertOctagon size={18} />
                 <span>Emergency Support Request</span>
@@ -548,7 +556,7 @@ const Landing = () => {
       <Section className="section max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-[#0F9D8A] text-xs font-black uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-[#0F9D8A] text-xs font-bold uppercase tracking-wider">
               <BarChart3 size={16} /> PATIENT ANALYTICS
             </div>
 
@@ -556,18 +564,18 @@ const Landing = () => {
               PATIENT HEALTH TRENDS & ANALYTICS
             </h2>
 
-            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+            <p className="text-sm text-slate-600 leading-relaxed">
               Track vital historical trends, report history, appointment schedules, and risk assessments with integrated health visualizations.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
-                <h4 className="text-xs font-black text-slate-900">Health Trends</h4>
-                <p className="text-[11px] text-slate-500">Track vitals and physiological parameters</p>
+                <h3 className="text-xs font-bold text-slate-900">Health Trends</h3>
+                <p className="text-xs text-slate-600">Track vitals and physiological parameters</p>
               </div>
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
-                <h4 className="text-xs font-black text-slate-900">Report History</h4>
-                <p className="text-[11px] text-slate-500">Complete archive of diagnostic reports</p>
+                <h3 className="text-xs font-bold text-slate-900">Report History</h3>
+                <p className="text-xs text-slate-600">Complete archive of diagnostic reports</p>
               </div>
             </div>
           </div>
@@ -588,17 +596,17 @@ const Landing = () => {
       <Section className="section max-w-7xl mx-auto px-6 py-8">
         <div className="bg-slate-900 text-white rounded-3xl p-8 md:p-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center shadow-2xl">
           <div className="space-y-4">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#0F9D8A] bg-teal-500/10 px-3 py-1 rounded-full border border-teal-500/20">
+            <span className="text-xs font-bold uppercase tracking-wider text-teal-300 bg-teal-500/10 px-3 py-1 rounded-full border border-teal-500/20">
               CLINICAL AI CHATBOT
             </span>
             <h2 className="text-2xl md:text-3xl font-extrabold">MEET YOUR AI HEALTH ASSISTANT</h2>
-            <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm text-slate-300 leading-relaxed">
               Get help understanding medical terminology, navigating hospital departments, organizing report information, and preparing questions for your physician.
             </p>
             
             <button
-              onClick={() => navigate('/login')}
-              className="px-6 py-4 bg-[#0F9D8A] hover:bg-teal-600 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-teal-900/30 flex items-center gap-2"
+              onClick={() => navigate('/patient/login')}
+              className="px-6 py-3.5 bg-[#0F9D8A] hover:bg-teal-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-teal-900/30 flex items-center gap-2"
             >
               <Brain size={18} />
               <span>ASK HEALTH ANALYZER AI</span>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { Calendar, Clock, User, Hospital, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, User, Hospital, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { getDepartments, getDepartmentDoctors, bookAppointment, getMyAppointments } from '../../services/hospitalService';
 
 const Appointments = () => {
@@ -10,13 +10,20 @@ const Appointments = () => {
   const [doctors, setDoctors] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingDoctors, setLoadingDoctors] = useState(false);
+  const [doctorError, setDoctorError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [selectedDept, setSelectedDept] = useState('');
   const [selectedDoc, setSelectedDoc] = useState('');
   const [appDate, setAppDate] = useState('');
-  const [timeSlot, setTimeSlot] = useState('10:00 AM');
+  const [timeSlot, setTimeSlot] = useState('09:00 AM');
   const [reason, setReason] = useState('');
   const [message, setMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Get today's date in YYYY-MM-DD for min date attribute
+  const todayStr = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     fetchInitialData();
@@ -32,7 +39,7 @@ const Appointments = () => {
       setDepartments(depts || []);
       setAppointments(apps || []);
 
-      // Parse pre-selected department or doctor from state
+      // Parse pre-selected department or doctor from location state
       const stateDeptId = location.state?.departmentId;
       const stateDeptSlug = location.state?.departmentSlug;
       const stateDocId = location.state?.doctorId;
@@ -48,11 +55,22 @@ const Appointments = () => {
       }
 
       if (targetDept) {
-        setSelectedDept(String(targetDept.id));
-        const docs = await getDepartmentDoctors(targetDept.id).catch(() => []);
-        setDoctors(docs || []);
-        if (stateDocId && docs.some(d => String(d.id) === String(stateDocId))) {
-          setSelectedDoc(String(stateDocId));
+        const deptIdStr = String(targetDept.id);
+        setSelectedDept(deptIdStr);
+        setLoadingDoctors(true);
+        setDoctorError(null);
+        try {
+          const docs = await getDepartmentDoctors(targetDept.id);
+          setDoctors(docs || []);
+          if (stateDocId && docs.some(d => String(d.id) === String(stateDocId))) {
+            setSelectedDoc(String(stateDocId));
+          }
+        } catch (err) {
+          console.error(err);
+          setDoctorError('Unable to load doctors.');
+          setDoctors([]);
+        } finally {
+          setLoadingDoctors(false);
         }
       }
     } catch (err) {
@@ -65,15 +83,24 @@ const Appointments = () => {
   const handleDeptChange = async (deptId) => {
     setSelectedDept(deptId);
     setSelectedDoc('');
+    setDoctorError(null);
+
     if (!deptId) {
       setDoctors([]);
+      setLoadingDoctors(false);
       return;
     }
+
+    setLoadingDoctors(true);
     try {
       const docs = await getDepartmentDoctors(deptId);
       setDoctors(docs || []);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch department doctors:', err);
+      setDoctorError('Unable to load doctors.');
+      setDoctors([]);
+    } finally {
+      setLoadingDoctors(false);
     }
   };
 
@@ -81,24 +108,35 @@ const Appointments = () => {
     e.preventDefault();
     if (!selectedDoc || !appDate) return;
 
+    setSubmitting(true);
+    setMessage('');
+    setErrorMessage('');
+
     try {
       await bookAppointment({
         doctor_id: parseInt(selectedDoc),
-        department_id: parseInt(selectedDept) || None,
+        department_id: parseInt(selectedDept) || null,
         appointment_date: appDate,
         time_slot: timeSlot,
         reason: reason
       });
 
-      setMessage('Appointment request submitted successfully!');
+      setMessage('Appointment requested successfully!');
       setSelectedDept('');
       setSelectedDoc('');
+      setDoctors([]);
       setAppDate('');
       setReason('');
-      fetchInitialData();
+      
+      // Refresh appointment history list
+      const apps = await getMyAppointments().catch(() => []);
+      setAppointments(apps || []);
     } catch (err) {
-      console.error(err);
-      setMessage('Failed to book appointment. Please try again.');
+      console.error('Appointment booking error:', err);
+      const detail = err.response?.data?.detail || 'Failed to book appointment. Please try again.';
+      setErrorMessage(detail);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -113,8 +151,19 @@ const Appointments = () => {
 
       {message && (
         <div className="p-4 bg-teal-50 border border-teal-200 text-teal-800 font-bold text-xs rounded-xl flex items-center justify-between">
-          <span>{message}</span>
-          <button onClick={() => setMessage('')} className="text-teal-600 font-bold">✕</button>
+          <span className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-[#0F9D8A]" /> {message}
+          </span>
+          <button onClick={() => setMessage('')} className="text-teal-600 font-bold hover:text-teal-900">✕</button>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs rounded-xl flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <AlertCircle size={16} className="text-rose-600" /> {errorMessage}
+          </span>
+          <button onClick={() => setErrorMessage('')} className="text-rose-600 font-bold hover:text-rose-900">✕</button>
         </div>
       )}
 
@@ -126,6 +175,7 @@ const Appointments = () => {
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* 1. SELECT DEPARTMENT */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">1. Select Department</label>
               <select
@@ -141,33 +191,65 @@ const Appointments = () => {
               </select>
             </div>
 
+            {/* 2. SELECT SPECIALIST DOCTOR */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">2. Select Specialist Doctor</label>
               <select
                 value={selectedDoc}
                 onChange={(e) => setSelectedDoc(e.target.value)}
-                disabled={!selectedDept || doctors.length === 0}
+                disabled={!selectedDept || loadingDoctors || doctorError || doctors.length === 0}
                 required
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0F9D8A] disabled:opacity-50"
               >
-                <option value="">{doctors.length === 0 ? '-- Select Department First --' : '-- Choose Doctor --'}</option>
-                {doctors.map((doc) => (
-                  <option key={doc.id} value={doc.id}>{doc.full_name} ({doc.specialization})</option>
-                ))}
+                {!selectedDept && (
+                  <option value="">-- Select Department First --</option>
+                )}
+                {selectedDept && loadingDoctors && (
+                  <option value="">Loading doctors...</option>
+                )}
+                {selectedDept && !loadingDoctors && doctorError && (
+                  <option value="">Unable to load doctors</option>
+                )}
+                {selectedDept && !loadingDoctors && !doctorError && doctors.length === 0 && (
+                  <option value="">No doctors available for this department</option>
+                )}
+                {selectedDept && !loadingDoctors && !doctorError && doctors.length > 0 && (
+                  <>
+                    <option value="">-- Choose Doctor --</option>
+                    {doctors.map((doc) => (
+                      <option key={doc.id} value={doc.id}>
+                        {doc.full_name} ({doc.specialization})
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
+
+              {selectedDept && doctorError && (
+                <button
+                  type="button"
+                  onClick={() => handleDeptChange(selectedDept)}
+                  className="mt-1 text.xs text-rose-600 font-semibold hover:underline flex items-center gap-1"
+                >
+                  <RefreshCw size={12} /> Unable to load doctors. Click to retry.
+                </button>
+              )}
             </div>
 
+            {/* 3. APPOINTMENT DATE */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">3. Appointment Date</label>
               <input
                 type="date"
                 value={appDate}
+                min={todayStr}
                 onChange={(e) => setAppDate(e.target.value)}
                 required
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-[#0F9D8A]"
               />
             </div>
 
+            {/* 4. TIME SLOT */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">4. Time Slot</label>
               <select
@@ -182,6 +264,7 @@ const Appointments = () => {
               </select>
             </div>
 
+            {/* REASON FOR VISIT */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Reason for Visit</label>
               <textarea
@@ -195,9 +278,10 @@ const Appointments = () => {
 
             <button
               type="submit"
-              className="w-full py-3.5 bg-[#0F9D8A] hover:bg-teal-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-teal-600/20"
+              disabled={submitting || !selectedDoc || !appDate}
+              className="w-full py-3.5 bg-[#0F9D8A] hover:bg-teal-700 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-teal-600/20 flex items-center justify-center gap-2"
             >
-              Request Appointment
+              {submitting ? 'Requesting Appointment...' : 'Request Appointment'}
             </button>
           </form>
         </div>

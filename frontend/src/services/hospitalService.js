@@ -50,3 +50,19 @@ export const updateAppointmentStatus = async (id, status, notes = '') => {
   const response = await api.put(`/appointments/${id}/status`, { status, notes });
   return response.data;
 };
+
+export const getPatientClinicalSummary = async (patientId) => {
+  const response = await api.get(`/doctors/patient/${patientId}`);
+  return response.data;
+};
+
+export const getConversationWithPatient = async (patientId) => {
+  const response = await api.get(`/communications/patient/${patientId}`);
+  return response.data;
+};
+
+export const sendMessageToPatient = async (messageData) => {
+  const response = await api.post('/communications', messageData);
+  return response.data;
+};
+

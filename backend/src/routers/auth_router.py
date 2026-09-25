@@ -5,6 +5,7 @@ from typing import Optional
 from datetime import timedelta, datetime
 import random
 import re
+import json
 
 from src.database import get_db_connection
 from src.auth import (
@@ -26,6 +27,7 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     blood_group: Optional[str] = None
     mobile_no: Optional[str] = None
+    profile_data: Optional[dict] = None
 
 class ForgotPasswordRequest(BaseModel):
     email: str
@@ -147,6 +149,15 @@ async def read_users_me(current_user=Depends(get_current_user)):
         
         if user is None:
             raise HTTPException(status_code=404, detail="User not found")
+        
+        # Ensure profile_data is parsed as dict if returned as string
+        if user.get("profile_data") and isinstance(user["profile_data"], str):
+            try:
+                user["profile_data"] = json.loads(user["profile_data"])
+            except Exception:
+                user["profile_data"] = {}
+        elif not user.get("profile_data"):
+            user["profile_data"] = {}
             
         return user
     except Exception as e:
@@ -164,7 +175,7 @@ async def update_user_me(user_update: UserUpdate, current_user=Depends(get_curre
     
     try:
         cursor = conn.cursor(dictionary=True)
-        ALLOWED_COLUMNS = {"full_name", "blood_group", "mobile_no"}
+        ALLOWED_COLUMNS = {"full_name", "blood_group", "mobile_no", "profile_data"}
         update_data = {k: v for k, v in user_update.dict(exclude_unset=True).items() if k in ALLOWED_COLUMNS}
         if not update_data:
             raise HTTPException(status_code=400, detail="No valid fields provided for update")
@@ -174,22 +185,77 @@ async def update_user_me(user_update: UserUpdate, current_user=Depends(get_curre
             if not _is_valid_mobile(update_data["mobile_no"]):
                 raise HTTPException(status_code=400, detail="Invalid mobile number format")
 
-        columns = ", ".join([f"`{k}` = %s" for k in update_data.keys()])
+        # Serialize profile_data if provided
+        if "profile_data" in update_data and isinstance(update_data["profile_data"], dict):
+            update_data["profile_data"] = json.dumps(update_data["profile_data"])
+
+        columns = ", ".join([f"{k} = %s" for k in update_data.keys()])
         values = list(update_data.values())
         values.append(current_user.user_id)
         
-        query = f"UPDATE users SET {columns} WHERE id = %s"
+        query = f"UPDATE users SET {columns}, updated_at = NOW() WHERE id = %s"
         cursor.execute(query, tuple(values))
+        
+        # Record audit log
+        try:
+            audit_details = json.dumps({"updated_fields": list(update_data.keys())})
+            cursor.execute(
+                "INSERT INTO audit_logs (user_id, action, details, status) VALUES (%s, %s, %s, %s)",
+                (current_user.user_id, "Patient Profile Information Updated", audit_details, "Success")
+            )
+        except Exception as audit_err:
+            print("Audit log error:", audit_err)
+
         conn.commit()
         
         cursor.execute("SELECT * FROM users WHERE id = %s", (current_user.user_id,))
         updated_user = cursor.fetchone()
+
+        if updated_user and updated_user.get("profile_data") and isinstance(updated_user["profile_data"], str):
+            try:
+                updated_user["profile_data"] = json.loads(updated_user["profile_data"])
+            except Exception:
+                updated_user["profile_data"] = {}
+        elif updated_user and not updated_user.get("profile_data"):
+            updated_user["profile_data"] = {}
+
         return updated_user
         
     except Exception as e:
         if "Duplicate entry" in str(e):
             raise HTTPException(status_code=400, detail="Mobile number already registered by another user")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'conn' in locals(): conn.close()
+
+
+@router.get("/users/me/activity")
+async def get_user_activity(current_user=Depends(get_current_user)):
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT id, action, details, created_at, status FROM audit_logs WHERE user_id = %s ORDER BY created_at DESC LIMIT 10",
+            (current_user.user_id,)
+        )
+        logs = cursor.fetchall() or []
+        result = []
+        for log in logs:
+            dt = log.get("created_at")
+            result.append({
+                "id": log.get("id"),
+                "action": log.get("action"),
+                "details": log.get("details"),
+                "status": log.get("status", "Success"),
+                "timestamp": dt.isoformat() if hasattr(dt, 'isoformat') else str(dt) if dt else None
+            })
+        return result
+    except Exception as e:
+        print("Error fetching activity logs:", e)
+        return []
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()

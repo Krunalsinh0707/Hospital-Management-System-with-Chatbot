@@ -1,3 +1,4 @@
+
 pandas
 numpy
 scikit-learn
@@ -14,7 +15,8 @@ python-jose[cryptography]
 passlib[bcrypt]
 alembic
 sqlalchemy
-pymysql 
+pymysql
+psycopg[binary]
 pytesseract
 Pillow
 reportlab

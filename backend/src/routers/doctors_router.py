@@ -101,3 +101,53 @@ def get_doctor_profile(db: Session = Depends(get_db), current_user=Depends(get_c
         "experience_years": doctor.experience_years,
         "status": doctor.status
     }
+
+@router.get("/patient/{patient_id}")
+def get_patient_clinical_summary(patient_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    doctor = db.query(Doctor).filter(Doctor.user_id == current_user.user_id).first()
+    if not doctor and current_user.role not in ['admin', 'hospital_admin', 'doctor', 'emergency_doctor']:
+        raise HTTPException(status_code=403, detail="Doctor privileges required to access clinical patient record")
+
+    patient = db.query(User).filter(User.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient record not found")
+
+    # Fetch appointments
+    from src.models import Appointment
+    app_query = db.query(Appointment).filter(Appointment.patient_id == patient_id)
+    if doctor:
+        app_query = app_query.filter(Appointment.doctor_id == doctor.id)
+    appointments = app_query.order_by(Appointment.appointment_date.desc()).all()
+
+    app_list = []
+    for app in appointments:
+        app_list.append({
+            "id": app.id,
+            "appointment_date": app.appointment_date.strftime("%Y-%m-%d %H:%M") if app.appointment_date else "",
+            "time_slot": app.time_slot,
+            "status": app.status,
+            "reason": app.reason,
+            "notes": app.notes
+        })
+
+    profile = patient.profile_data or {}
+    if isinstance(profile, str):
+        try:
+            import json
+            profile = json.loads(profile)
+        except Exception:
+            profile = {}
+
+    return {
+        "id": patient.id,
+        "full_name": patient.full_name,
+        "email": patient.email,
+        "mobile_no": patient.mobile_no,
+        "blood_group": patient.blood_group,
+        "role": patient.role,
+        "profile_data": profile,
+        "created_at": patient.created_at.strftime("%Y-%m-%d") if patient.created_at else "",
+        "appointments": app_list,
+        "total_consultations": len(app_list)
+    }
+

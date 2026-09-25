@@ -27,7 +27,7 @@ const Register = () => {
     try {
       const success = await register(fullName, email, mobileNo, bloodGroup, password);
       if (success) {
-        navigate('/login', { state: { message: 'Registration successful! Please login.' } });
+        navigate('/patient/login', { state: { message: 'Registration successful! Please sign in.' } });
       } else {
         setError('Registration failed. Please try again.');
       }
@@ -165,7 +165,7 @@ const Register = () => {
 
           <div className="mt-8 pt-6 border-t border-slate-50 text-center">
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-              Already Registered? <Link to="/login" className="text-[#0F9D8A] hover:underline">Authenticate Session</Link>
+              Already Registered? <Link to="/patient/login" className="text-[#0F9D8A] hover:underline">Patient Sign In</Link>
             </p>
           </div>
         </FloatingCard>

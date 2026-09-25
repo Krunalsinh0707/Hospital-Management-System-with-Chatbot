@@ -8,6 +8,10 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const portal = location.state?.portal || new URLSearchParams(location.search).get('portal') || 'patient';
+  const backLoginUrl = portal === 'doctor' ? '/doctor/login' : portal === 'admin' ? '/admin/login' : '/patient/login';
+  const portalLabel = portal === 'doctor' ? 'Doctor Portal' : portal === 'admin' ? 'Admin Portal' : 'Patient Portal';
+
   const emailFromState = location.state?.email || sessionStorage.getItem('health_reset_email') || '';
   const otpFromState = location.state?.otp || sessionStorage.getItem('health_reset_otp') || '';
 
@@ -78,8 +82,8 @@ const ResetPassword = () => {
         sessionStorage.removeItem('health_reset_otp');
 
         setTimeout(() => {
-          navigate('/login', {
-            state: { message: 'Password Updated Successfully. Please login.' }
+          navigate(backLoginUrl, {
+            state: { message: 'Password Updated Successfully. Please sign in.' }
           });
         }, 1500);
       } else {
@@ -238,8 +242,8 @@ const ResetPassword = () => {
           </form>
 
           <div className="mt-6 text-center">
-            <Link to="/login" className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-wider">
-              Back to Login
+            <Link to={backLoginUrl} className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-wider">
+              Back to {portalLabel}
             </Link>
           </div>
         </div>

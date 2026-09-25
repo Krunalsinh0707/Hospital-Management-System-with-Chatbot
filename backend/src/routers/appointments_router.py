@@ -27,8 +27,18 @@ def book_appointment(data: AppointmentCreate, db: Session = Depends(get_db), cur
     if not doctor:
         raise HTTPException(status_code=404, detail="Doctor not found")
 
+    if data.department_id:
+        dept = db.query(Department).filter(Department.id == data.department_id).first()
+        if not dept:
+            raise HTTPException(status_code=404, detail="Department not found")
+        if doctor.department_id != data.department_id:
+            raise HTTPException(status_code=400, detail="Doctor does not belong to the selected department")
+
     try:
-        app_date = datetime.fromisoformat(data.appointment_date.replace("Z", "+00:00"))
+        if "T" in data.appointment_date or " " in data.appointment_date:
+            app_date = datetime.fromisoformat(data.appointment_date.replace("Z", "+00:00"))
+        else:
+            app_date = datetime.strptime(data.appointment_date, "%Y-%m-%d")
     except Exception:
         app_date = datetime.now()
 

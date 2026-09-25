@@ -20,8 +20,16 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use((response) => response, (error) => {
   if (error.response && error.response.status === 401) {
     localStorage.removeItem('token');
-    if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
-      window.location.href = '/login';
+    const path = window.location.pathname;
+    const isLoginPage = path === '/patient/login' || path === '/doctor/login' || path === '/admin/login' || path === '/login' || path === '/';
+    if (!isLoginPage) {
+      if (path.startsWith('/doctor')) {
+        window.location.replace('/doctor/login');
+      } else if (path.startsWith('/admin')) {
+        window.location.replace('/admin/login');
+      } else {
+        window.location.replace('/patient/login');
+      }
     }
   }
   return Promise.reject(error);

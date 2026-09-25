@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import os
@@ -119,6 +119,9 @@ app.include_router(analytics_router.router)
 app.include_router(notifications_router.router)
 app.include_router(model_registry_router.router)
 
+from sqlalchemy import text
+from src.database import get_db
+
 # ---------------- BASIC ROOT ROUTE ----------------
 @app.get("/")
 def root():
@@ -128,4 +131,22 @@ def root():
         "build": VERSION_CONFIG["build_number"],
         "status": "online"
     }
+
+@app.get("/health")
+def health_check(db=Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {
+            "status": "healthy",
+            "database": "PostgreSQL",
+            "connected": True
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "database": "PostgreSQL",
+            "connected": False,
+            "error": str(e)
+        }
+
 

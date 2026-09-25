@@ -1,0 +1,224 @@
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Stethoscope, Lock, Eye, EyeOff, AlertCircle, ShieldCheck, ArrowRight, UserCheck } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
+import mainLogo from '../../assets/logo.png';
+
+const DoctorLogin = () => {
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { login } = useAuth();
+  const { showNotification } = useNotification();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    const cleanId = identifier.trim();
+    if (!cleanId) {
+      setError('Please enter your clinical email or doctor ID.');
+      return;
+    }
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const user = await login(cleanId, password, 'doctor');
+      if (user) {
+        showNotification(`Clinical session authorized: Dr. ${user.full_name || ''}`, 'success');
+        navigate('/doctor/dashboard');
+      }
+    } catch (err) {
+      if (err.code === 'WRONG_PORTAL') {
+        setError(err.message);
+      } else if (err.response && err.response.status === 401) {
+        setError('Clinical ID or password is incorrect.');
+      } else if (err.response && err.response.status >= 500) {
+        setError('Hospital authentication service is unavailable. Please try again.');
+      } else if (err.message && err.message.includes('Network Error')) {
+        setError('Unable to connect to the clinical server. Check network connectivity.');
+      } else {
+        setError(err.message || 'Authentication failed. Please verify credentials.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0F172A] flex flex-col justify-between py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden text-slate-100">
+      {/* Subtle Background Accent */}
+      <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-500/20 via-slate-900 to-transparent" />
+
+      {/* Top Clinical Header */}
+      <header className="max-w-md w-full mx-auto flex items-center justify-between relative z-10 pt-2">
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 rounded-xl bg-slate-800/90 border border-slate-700/80 flex items-center justify-center p-2 text-[#0F9D8A] shadow-inner transition-transform group-hover:scale-105">
+            <Stethoscope size={22} />
+          </div>
+          <div>
+            <span className="text-base font-black tracking-tight text-white block leading-tight">HEALTH ANALYZER</span>
+            <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest block">Clinical Workstation</span>
+          </div>
+        </Link>
+        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-[11px] font-bold text-slate-300">
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Clinical Network</span>
+        </div>
+      </header>
+
+      {/* Main Form Workstation */}
+      <main className="max-w-md w-full mx-auto my-auto relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className="bg-white rounded-3xl shadow-2xl shadow-black/40 border border-slate-100 p-8 sm:p-10 text-slate-900"
+        >
+          {/* Badge & Portal Title */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-100 text-[#0F9D8A] text-xs font-bold uppercase tracking-wider mb-3">
+              <ShieldCheck size={14} /> Authorized Personnel
+            </div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Doctor Portal</h1>
+            <p className="text-xs font-semibold text-slate-500 mt-1">Professional access for authorized physicians and medical staff</p>
+          </div>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-100 flex items-start gap-3 text-rose-700 text-xs font-semibold leading-relaxed"
+                role="alert"
+              >
+                <AlertCircle size={18} className="shrink-0 mt-0.5 text-rose-500" />
+                <div>{error}</div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            {/* Clinical ID / Email Field */}
+            <div>
+              <label htmlFor="doctor-email" className="block text-xs font-bold text-slate-700 mb-2">
+                Doctor Email / ID
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <UserCheck size={18} />
+                </div>
+                <input
+                  id="doctor-email"
+                  type="text"
+                  autoComplete="username"
+                  required
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="doctor@healthanalyzer.com"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F9D8A]/20 focus:border-[#0F9D8A] transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="doctor-password" block className="text-xs font-bold text-slate-700">
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password?portal=doctor"
+                  className="text-xs font-semibold text-[#0F9D8A] hover:text-[#0b7e6e] transition-colors"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Lock size={18} />
+                </div>
+                <input
+                  id="doctor-password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your clinical password"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-11 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F9D8A]/20 focus:border-[#0F9D8A] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full mt-2 bg-[#0F172A] hover:bg-slate-900 text-white text-sm font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-slate-900/25 hover:shadow-slate-900/35 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Authorizing Clinical Access...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Security Notice */}
+          <div className="mt-7 pt-5 border-t border-slate-100 flex items-center justify-center gap-2 text-slate-400 text-xs font-semibold">
+            <ShieldCheck size={14} className="text-teal-600" />
+            <span>Authorized clinical personnel only.</span>
+          </div>
+        </motion.div>
+
+        {/* Secondary Portal Links */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-slate-400 font-medium">
+            Alternate portals:{' '}
+            <Link to="/patient/login" className="font-semibold text-teal-300 hover:text-teal-200 transition-colors underline decoration-slate-600">
+              Patient Login
+            </Link>
+            <span className="mx-2 text-slate-600">·</span>
+            <Link to="/admin/login" className="font-semibold text-teal-300 hover:text-teal-200 transition-colors underline decoration-slate-600">
+              Admin Login
+            </Link>
+          </p>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="text-center text-[11px] font-medium text-slate-500 py-3 relative z-10">
+        Clinical Diagnostic & Treatment Gateway &middot; SRL-3 Certified &middot; AES-256 Protected
+      </footer>
+    </div>
+  );
+};
+
+export default DoctorLogin;

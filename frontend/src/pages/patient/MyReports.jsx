@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FileText, Upload, Plus, Cpu, CheckCircle2, Clock, AlertTriangle, Hospital, FileSpreadsheet, Sparkles, ArrowRight } from 'lucide-react';
+import { 
+  FileText, Upload, Plus, CheckCircle2, Clock, 
+  AlertTriangle, Hospital, ArrowRight, Search, Filter, ShieldCheck
+} from 'lucide-react';
 import { getMyReports } from '../../services/medicalReportsService';
-import AIAnalysisCard from '../../components/AIAnalysisCard';
+import ReportDetailModal from '../../components/ReportDetailModal';
 import { useNavigate } from 'react-router-dom';
 
 const MyReports = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('ALL'); // ALL, HOSPITAL, UPLOADED
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedReport, setSelectedReport] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,200 +26,200 @@ const MyReports = () => {
       const data = await getMyReports();
       setReports(data || []);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load medical records:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const filteredReports = reports.filter(r => {
-    if (activeTab === 'HOSPITAL') return r.report_source === 'hospital';
-    if (activeTab === 'UPLOADED') return r.report_source === 'existing_upload';
-    return true;
+    const matchesTab = 
+      activeTab === 'ALL' ||
+      (activeTab === 'HOSPITAL' && r.report_source === 'hospital') ||
+      (activeTab === 'UPLOADED' && r.report_source === 'existing_upload');
+
+    const matchesSearch = 
+      r.report_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.department_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.doctor_name?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesTab && matchesSearch;
   });
 
+  const openReport = (rep) => {
+    setSelectedReport(rep);
+    setIsDetailOpen(true);
+  };
+
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">MY MEDICAL REPORTS</h1>
-          <p className="text-xs font-semibold text-slate-500 mt-1">
-            Access hospital-generated digital records or process existing diagnostic reports from external laboratories.
-          </p>
-        </div>
-
-        <button
-          onClick={() => navigate('/own-report')}
-          className="px-5 py-3 bg-[#0F9D8A] hover:bg-teal-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center gap-2"
-        >
-          <Sparkles size={16} /> I Have My Own Report
-        </button>
-      </div>
-
-      {/* 2 Major Options Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* OPTION 1: GET HOSPITAL REPORT */}
-        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col justify-between space-y-6 hover:border-[#0F9D8A] transition-all group">
-          <div className="space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-teal-50 text-[#0F9D8A] flex items-center justify-center font-bold shadow-inner group-hover:scale-105 transition-transform">
-              <Hospital size={28} />
-            </div>
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#0F9D8A] bg-teal-50 px-2.5 py-0.5 rounded">
-                INTERNAL HOSPITAL RECORDS
+    <div className="min-h-screen bg-[#F6F9FB] p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Page Header */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0F9D8A] bg-teal-50 px-2.5 py-0.5 rounded">
+                Electronic Health Records
               </span>
-              <h2 className="text-xl font-extrabold text-slate-900 mt-2">GET HOSPITAL REPORT</h2>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed mt-2">
-                View diagnostic reports, laboratory panels, and digital records generated internally by doctors and staff at Health Analyzer Hospital.
-              </p>
+              <span className="text-xs text-slate-400 font-medium">• Diagnostic Vault</span>
             </div>
-          </div>
-
-          <button
-            onClick={() => setActiveTab('HOSPITAL')}
-            className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md"
-          >
-            [ VIEW HOSPITAL REPORTS ]
-          </button>
-        </div>
-
-        {/* OPTION 2: ALREADY HAVE A REPORT? -> I HAVE MY OWN REPORT */}
-        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col justify-between space-y-6 hover:border-[#0F9D8A] transition-all group">
-          <div className="space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-inner group-hover:scale-105 transition-transform">
-              <Upload size={28} />
-            </div>
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded">
-                EXTERNAL REPORT ANALYSIS
-              </span>
-              <h2 className="text-xl font-extrabold text-slate-900 mt-2">I HAVE MY OWN REPORT</h2>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed mt-2">
-                Already have a medical report from another hospital, lab, or doctor? Upload your PDF/Image scan or enter manual parameters for department selection & AI pre-analysis.
-              </p>
-            </div>
+            <h1 className="text-xl font-bold text-slate-900 mt-1">My Medical Reports & Laboratory Records</h1>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Access hospital-issued diagnostic charts and external laboratory uploads with AI pre-analysis.
+            </p>
           </div>
 
           <button
             onClick={() => navigate('/own-report')}
-            className="w-full py-3.5 bg-[#0F9D8A] hover:bg-teal-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-teal-600/20 flex items-center justify-center gap-2"
+            className="px-4 py-2 bg-[#0F9D8A] hover:bg-teal-700 text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5 self-start sm:self-center"
           >
-            <span>[ PROCESS OWN REPORT ]</span>
-            <ArrowRight size={14} />
+            <Upload size={14} />
+            <span>Upload New Report</span>
           </button>
         </div>
-      </div>
 
-      {/* Reports History & Listing Section */}
-      <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-          <div>
-            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Report History & Records</h3>
-            <p className="text-xs text-slate-500">Filter between hospital-generated records and processed external reports.</p>
+        {/* 2 Primary Action Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Hospital Internal Records */}
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#0F9D8A] bg-teal-50 px-2 py-0.5 rounded">
+                  Hospital EMR
+                </span>
+              </div>
+              <h2 className="text-base font-bold text-slate-900">Hospital Medical Records</h2>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Official diagnostic tests, pathology analyses, and consultation summaries generated by Health Analyzer Hospital clinicians.
+              </p>
+            </div>
+            <button
+              onClick={() => setActiveTab('HOSPITAL')}
+              className="py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition-colors text-center"
+            >
+              Filter Hospital Records
+            </button>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
-            {['ALL', 'HOSPITAL', 'UPLOADED'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === tab ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
+          {/* External Report OCR Processing */}
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
+                  External OCR Pipeline
+                </span>
+              </div>
+              <h2 className="text-base font-bold text-slate-900">External Report Ingestion</h2>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Have a report from an outside diagnostic center? Upload a PDF or scan to automatically extract parameters and trigger AI pre-analysis.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/own-report')}
+              className="py-2 px-3 bg-[#0F9D8A] hover:bg-teal-700 text-white text-xs font-semibold rounded-lg transition-colors text-center inline-flex items-center justify-center gap-1.5"
+            >
+              <span>Upload or Enter Values</span>
+              <ArrowRight size={13} />
+            </button>
           </div>
         </div>
 
-        {/* Report List */}
-        {loading ? (
-          <p className="text-xs text-slate-400 py-8 text-center">Loading medical records...</p>
-        ) : filteredReports.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">
-            <FileText size={40} className="mx-auto mb-2 opacity-40" />
-            <p className="text-xs font-bold">No medical reports found for this filter.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredReports.map((report) => (
-              <div
-                key={report.id}
-                onClick={() => setSelectedReport(report)}
-                className="bg-slate-50/70 hover:bg-white p-5 rounded-2xl border border-slate-200 hover:border-[#0F9D8A] transition-all cursor-pointer shadow-sm space-y-3 group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${
-                    report.report_source === 'hospital' ? 'bg-teal-100 text-teal-800' : 'bg-indigo-100 text-indigo-800'
-                  }`}>
-                    {report.report_source === 'hospital' ? 'Hospital Generated' : 'External Processed'}
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-400">{report.report_date}</span>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-extrabold text-slate-900 group-hover:text-[#0F9D8A] transition-colors">
-                    {report.report_title}
-                  </h4>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">{report.department_name}</p>
-                </div>
-
-                <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700 uppercase">
-                    {report.status}
-                  </span>
-                  <span className="text-xs font-bold text-[#0F9D8A] group-hover:translate-x-1 transition-transform">
-                    View Details →
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Selected Report Modal */}
-      {selectedReport && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div>
-                <span className="text-[10px] font-black text-[#0F9D8A] uppercase tracking-widest">{selectedReport.department_name}</span>
-                <h3 className="text-xl font-extrabold text-slate-900">{selectedReport.report_title}</h3>
-              </div>
-              <button onClick={() => setSelectedReport(null)} className="p-2 text-slate-400 hover:text-slate-900 text-sm font-bold">✕</button>
+        {/* Filter & Listing Card */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              {['ALL', 'HOSPITAL', 'UPLOADED'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                    activeTab === tab
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {tab === 'ALL' ? `All Records (${reports.length})` : tab === 'HOSPITAL' ? 'Hospital Issued' : 'External Uploads'}
+                </button>
+              ))}
             </div>
 
-            {selectedReport.ai_analysis && (
-              <AIAnalysisCard analysis={selectedReport.ai_analysis} />
-            )}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search records by title or department..."
+                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-[#0F9D8A]"
+              />
+            </div>
+          </div>
 
-            {selectedReport.doctor_review && (
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-700">Doctor Clinical Assessment</h4>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                    {selectedReport.doctor_review.review_status}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600">{selectedReport.doctor_review.clinical_notes || selectedReport.doctor_review.final_assessment}</p>
-                <p className="text-[10px] text-slate-400">Reviewed: {selectedReport.doctor_review.reviewed_at}</p>
+          {/* Records Table or Empty State */}
+          {loading ? (
+            <p className="text-xs text-slate-400 py-10 text-center font-medium">Loading clinical documents...</p>
+          ) : filteredReports.length === 0 ? (
+            <div className="py-12 text-center space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center mx-auto border border-slate-200">
+                <FileText size={22} />
               </div>
-            )}
-
-            <div className="flex justify-end">
+              <h3 className="text-sm font-bold text-slate-800">No medical reports found</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                No clinical records match this filter. Upload a laboratory panel to view automated parameter extraction.
+              </p>
               <button
-                onClick={() => setSelectedReport(null)}
-                className="px-5 py-2.5 bg-slate-900 text-white font-bold text-xs rounded-xl"
+                onClick={() => navigate('/own-report')}
+                className="px-4 py-2 bg-[#0F9D8A] hover:bg-teal-700 text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5"
               >
-                Close Record
+                <Upload size={14} />
+                <span>Upload Report</span>
               </button>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredReports.map((report) => (
+                <div
+                  key={report.id}
+                  onClick={() => openReport(report)}
+                  className="bg-white p-4 rounded-xl border border-slate-200 hover:border-slate-300 transition-all cursor-pointer shadow-xs space-y-3 flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                        report.report_source === 'hospital' 
+                          ? 'bg-teal-50 text-teal-700 border border-teal-200' 
+                          : 'bg-slate-100 text-slate-700'
+                      }`}>
+                        {report.report_source === 'hospital' ? 'Hospital Record' : 'External Processed'}
+                      </span>
+                      <span className="text-[11px] text-slate-400 font-medium">{report.report_date}</span>
+                    </div>
+
+                    <h3 className="text-sm font-bold text-slate-900 line-clamp-1">{report.report_title}</h3>
+                    <p className="text-xs text-slate-500">{report.department_name || 'General Medicine'}</p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 uppercase">
+                      {report.status}
+                    </span>
+                    <span className="text-xs font-semibold text-[#0F9D8A] hover:underline flex items-center gap-1">
+                      View Details →
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
+      {/* Clinical Report Detail Modal */}
+      <ReportDetailModal
+        report={selectedReport}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+      />
     </div>
   );
 };

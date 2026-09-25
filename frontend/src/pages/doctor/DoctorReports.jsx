@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { FileText, Cpu, CheckCircle2, AlertTriangle, XCircle, Edit3, ShieldCheck } from 'lucide-react';
 import { getReportsPendingReview, submitDoctorReview } from '../../services/medicalReportsService';
 import AIAnalysisCard from '../../components/AIAnalysisCard';
@@ -118,6 +119,14 @@ const DoctorReports = () => {
                   <h2 className="text-xl font-black text-slate-900">{selectedReport.report_title}</h2>
                   <p className="text-xs text-slate-500 font-medium">Patient: {selectedReport.patient_name} ({selectedReport.patient_email})</p>
                 </div>
+                {selectedReport.patient_id && (
+                  <Link
+                    to={`/doctor/patients/${selectedReport.patient_id}`}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-colors"
+                  >
+                    Open Patient Chart →
+                  </Link>
+                )}
               </div>
 
               {/* Extracted Parameters */}

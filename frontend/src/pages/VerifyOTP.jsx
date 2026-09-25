@@ -8,6 +8,10 @@ const VerifyOTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const portal = location.state?.portal || new URLSearchParams(location.search).get('portal') || 'patient';
+  const backLoginUrl = portal === 'doctor' ? '/doctor/login' : portal === 'admin' ? '/admin/login' : '/patient/login';
+  const portalLabel = portal === 'doctor' ? 'Doctor Portal' : portal === 'admin' ? 'Admin Portal' : 'Patient Portal';
+
   const emailFromState = location.state?.email || sessionStorage.getItem('health_reset_email') || '';
 
   const [email, setEmail] = useState(emailFromState);
@@ -89,8 +93,8 @@ const VerifyOTP = () => {
         sessionStorage.setItem('health_reset_otp', otpCode);
 
         setTimeout(() => {
-          navigate('/reset-password', {
-            state: { email, otp: otpCode }
+          navigate(`/reset-password?portal=${portal}`, {
+            state: { email, otp: otpCode, portal }
           });
         }, 1200);
       } else {
@@ -242,8 +246,8 @@ const VerifyOTP = () => {
               {timer > 0 ? `Resend OTP in ${formatTime(timer)}` : 'Resend OTP'}
             </button>
 
-            <Link to="/login" className="inline-flex items-center gap-1 text-[10px] font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest mt-1">
-              <ArrowLeft size={12} /> Back to Login
+            <Link to={backLoginUrl} className="inline-flex items-center gap-1 text-[10px] font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest mt-1">
+              <ArrowLeft size={12} /> Back to {portalLabel}
             </Link>
           </div>
         </div>

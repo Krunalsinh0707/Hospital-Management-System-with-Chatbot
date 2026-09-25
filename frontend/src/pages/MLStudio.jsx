@@ -72,7 +72,7 @@ const MLStudio = () => {
         {!user && (
           <div className="col-span-12 bg-amber-50 border border-amber-100 p-4 rounded-xl flex items-center gap-3 text-amber-700 text-sm font-bold shadow-sm">
             <AlertTriangle size={18} />
-            <span>GUEST MODE: Training sessions are volatile. <Link to="/login" className="underline hover:text-amber-900 transition-colors">Sign in</Link> to persist models.</span>
+            <span>GUEST MODE: Training sessions are volatile. <Link to="/patient/login" className="underline hover:text-amber-900 transition-colors">Sign in</Link> to persist models.</span>
           </div>
         )}
 

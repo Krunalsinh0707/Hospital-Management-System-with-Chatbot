@@ -119,9 +119,9 @@ async def get_cbc_history(limit: int = 50, offset: int = 0, current_user=Depends
         
         for r in reports:
             if r.get('cbc_json'):
-                r['cbc'] = json.loads(r['cbc_json'])
+                r['cbc'] = json.loads(r['cbc_json']) if isinstance(r['cbc_json'], str) else r['cbc_json']
             if r.get('interpretation_json'):
-                r['interpretation'] = json.loads(r['interpretation_json'])
+                r['interpretation'] = json.loads(r['interpretation_json']) if isinstance(r['interpretation_json'], str) else r['interpretation_json']
             if 'cbc_json' in r: del r['cbc_json']
             if 'interpretation_json' in r: del r['interpretation_json']
             

@@ -40,6 +40,7 @@ def get_my_reports(db: Session = Depends(get_db), current_user=Depends(get_curre
         
         ai = db.query(AIAnalysis).filter(AIAnalysis.report_id == r.id).first()
         review = db.query(DoctorReview).filter(DoctorReview.report_id == r.id).first()
+        ext = db.query(ReportExtraction).filter(ReportExtraction.report_id == r.id).first()
 
         result.append({
             "id": r.id,
@@ -51,6 +52,7 @@ def get_my_reports(db: Session = Depends(get_db), current_user=Depends(get_curre
             "doctor_name": doc_user.full_name if doc_user else "Hospital Medical Staff",
             "status": r.status,
             "original_filename": r.original_filename,
+            "extracted_parameters": ext.extracted_json if ext and ext.extracted_json else {},
             "ai_analysis": {
                 "prediction": ai.prediction,
                 "probability": ai.probability,
@@ -230,6 +232,7 @@ def get_reports_pending_review(db: Session = Depends(get_db), current_user=Depen
         ai = db.query(AIAnalysis).filter(AIAnalysis.report_id == r.id).first()
         result.append({
             "id": r.id,
+            "patient_id": r.patient_id,
             "patient_name": patient.full_name if patient else "Patient",
             "patient_email": patient.email if patient else "",
             "report_title": r.report_title,
@@ -247,6 +250,52 @@ def get_reports_pending_review(db: Session = Depends(get_db), current_user=Depen
             } if ai else None
         })
     return result
+
+@router.get("/patient/{patient_id}")
+def get_patient_reports_for_doctor(patient_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    doctor = db.query(Doctor).filter(Doctor.user_id == current_user.user_id).first()
+    if not doctor and current_user.role not in ['admin', 'hospital_admin', 'doctor', 'emergency_doctor'] and current_user.user_id != patient_id:
+        raise HTTPException(status_code=403, detail="Clinical authorization required")
+
+    reports = db.query(MedicalReport).filter(MedicalReport.patient_id == patient_id).order_by(MedicalReport.created_at.desc()).all()
+    result = []
+    for r in reports:
+        dept = db.query(Department).filter(Department.id == r.department_id).first() if r.department_id else None
+        doc = db.query(Doctor).filter(Doctor.id == r.doctor_id).first() if r.doctor_id else None
+        doc_user = db.query(User).filter(User.id == doc.user_id).first() if doc else None
+        ai = db.query(AIAnalysis).filter(AIAnalysis.report_id == r.id).first()
+        review = db.query(DoctorReview).filter(DoctorReview.report_id == r.id).first()
+        ext = db.query(ReportExtraction).filter(ReportExtraction.report_id == r.id).first()
+
+        result.append({
+            "id": r.id,
+            "report_source": r.report_source,
+            "report_title": r.report_title,
+            "report_type": r.report_type,
+            "report_date": r.report_date.strftime("%Y-%m-%d") if r.report_date else "",
+            "created_at": r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else "",
+            "department_name": dept.name if dept else "General",
+            "doctor_name": doc_user.full_name if doc_user else "Hospital Medical Staff",
+            "status": r.status,
+            "original_filename": r.original_filename,
+            "extracted_parameters": ext.extracted_json if ext and ext.extracted_json else {},
+            "ai_analysis": {
+                "model_name": ai.model_name,
+                "prediction": ai.prediction,
+                "probability": ai.probability,
+                "risk_level": ai.risk_level,
+                "important_factors": ai.important_factors,
+                "explanation": ai.explanation
+            } if ai else None,
+            "doctor_review": {
+                "review_status": review.review_status,
+                "clinical_notes": review.clinical_notes,
+                "final_assessment": review.final_assessment,
+                "reviewed_at": review.reviewed_at.strftime("%Y-%m-%d %H:%M") if review.reviewed_at else ""
+            } if review else None
+        })
+    return result
+
 
 @router.post("/{report_id}/review")
 def review_report(report_id: int, review_data: DoctorReviewCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):

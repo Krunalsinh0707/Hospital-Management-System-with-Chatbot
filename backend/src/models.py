@@ -15,14 +15,17 @@ class User(Base):
     blood_group = Column(String(5), nullable=False)
     password_hash = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=False)
-    role = Column(Enum('user', 'admin', 'patient', 'doctor', 'department_admin', 'hospital_admin', 'emergency_doctor'), default='patient')
+    role = Column(Enum('user', 'admin', 'patient', 'doctor', 'department_admin', 'hospital_admin', 'emergency_doctor', name='user_role_enum'), default='patient')
     email_verified = Column(Integer, default=1)
     mobile_verified = Column(Integer, default=1)
+    profile_data = Column(JSON, nullable=True, default={})
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     patient_reports = relationship("PatientReport", back_populates="user")
     cbc_reports = relationship("CbcReport", back_populates="user")
+    heart_reports = relationship("HeartReport", back_populates="user")
+    hypertension_reports = relationship("HypertensionReport", back_populates="user")
     doctor_profile = relationship("Doctor", back_populates="user", uselist=False)
 
 class Department(Base):
@@ -48,7 +51,7 @@ class Doctor(Base):
     license_number = Column(String(64), nullable=True)
     experience_years = Column(Integer, default=0)
     availability = Column(JSON, nullable=True)
-    status = Column(Enum('Active', 'OnLeave', 'Inactive'), default='Active')
+    status = Column(Enum('Active', 'OnLeave', 'Inactive', name='doctor_status_enum'), default='Active')
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="doctor_profile")
@@ -64,7 +67,7 @@ class Appointment(Base):
     department_id = Column(Integer, ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
     appointment_date = Column(DateTime, nullable=False)
     time_slot = Column(String(32), nullable=True)
-    status = Column(Enum('REQUESTED', 'CONFIRMED', 'REJECTED', 'CANCELLED', 'COMPLETED', 'NO_SHOW'), default='REQUESTED')
+    status = Column(Enum('REQUESTED', 'CONFIRMED', 'REJECTED', 'CANCELLED', 'COMPLETED', 'NO_SHOW', name='appointment_status_enum'), default='REQUESTED')
     reason = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -78,11 +81,11 @@ class MedicalReport(Base):
     patient_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="SET NULL"), nullable=True)
     department_id = Column(Integer, ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
-    report_source = Column(Enum('hospital', 'existing_upload'), default='existing_upload')
+    report_source = Column(Enum('hospital', 'existing_upload', name='report_source_enum'), default='existing_upload')
     report_title = Column(String(255), nullable=False)
     report_type = Column(String(100), nullable=True)
     report_date = Column(DateTime, server_default=func.now())
-    status = Column(Enum('UPLOADED', 'OCR_EXTRACTED', 'VALIDATED', 'AI_PRE_ANALYZED', 'DOCTOR_REVIEWED', 'FINALIZED'), default='UPLOADED')
+    status = Column(Enum('UPLOADED', 'OCR_EXTRACTED', 'VALIDATED', 'AI_PRE_ANALYZED', 'DOCTOR_REVIEWED', 'FINALIZED', name='medical_report_status_enum'), default='UPLOADED')
     original_filename = Column(String(255), nullable=True)
     file_path = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -98,7 +101,7 @@ class ReportExtraction(Base):
     report_id = Column(Integer, ForeignKey("medical_reports.id", ondelete="CASCADE"), nullable=False, unique=True)
     ocr_raw_text = Column(Text, nullable=True)
     extracted_json = Column(JSON, nullable=True)
-    validation_status = Column(Enum('VALID', 'NEEDS_REVIEW', 'FAILED'), default='VALID')
+    validation_status = Column(Enum('VALID', 'NEEDS_REVIEW', 'FAILED', name='extraction_validation_status_enum'), default='VALID')
     confidence_score = Column(Float, default=1.0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -114,7 +117,7 @@ class AIAnalysis(Base):
     model_version = Column(String(32), default="1.0")
     prediction = Column(String(100), nullable=False)
     probability = Column(Float, nullable=True)
-    risk_level = Column(Enum('LOW', 'MODERATE', 'HIGH', 'CRITICAL'), default='LOW')
+    risk_level = Column(Enum('LOW', 'MODERATE', 'HIGH', 'CRITICAL', name='ai_risk_level_enum'), default='LOW')
     important_factors = Column(JSON, nullable=True)
     explanation = Column(Text, nullable=True)
     requires_doctor_review = Column(Boolean, default=True)
@@ -128,7 +131,7 @@ class DoctorReview(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     report_id = Column(Integer, ForeignKey("medical_reports.id", ondelete="CASCADE"), nullable=False, unique=True)
     doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False)
-    review_status = Column(Enum('APPROVED', 'MODIFIED', 'REJECTED'), default='APPROVED')
+    review_status = Column(Enum('APPROVED', 'MODIFIED', 'REJECTED', name='review_status_enum'), default='APPROVED')
     clinical_notes = Column(Text, nullable=True)
     final_assessment = Column(Text, nullable=True)
     reviewed_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -152,8 +155,8 @@ class EmergencyRequest(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     patient_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    severity = Column(Enum('LOW', 'MEDIUM', 'HIGH', 'CRITICAL'), default='HIGH')
-    status = Column(Enum('REQUESTED', 'ACKNOWLEDGED', 'ASSIGNED', 'IN_REVIEW', 'IN_TREATMENT', 'RESOLVED', 'CANCELLED'), default='REQUESTED')
+    severity = Column(Enum('LOW', 'MEDIUM', 'HIGH', 'CRITICAL', name='emergency_severity_enum'), default='HIGH')
+    status = Column(Enum('REQUESTED', 'ACKNOWLEDGED', 'ASSIGNED', 'IN_REVIEW', 'IN_TREATMENT', 'RESOLVED', 'CANCELLED', name='emergency_status_enum'), default='REQUESTED')
     symptoms = Column(Text, nullable=True)
     location = Column(String(255), nullable=True)
     contact_phone = Column(String(32), nullable=True)
@@ -185,7 +188,7 @@ class Notification(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class PatientReport(Base):
-    __tablename__ = "Patient_Reports"
+    __tablename__ = "patient_reports"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -203,6 +206,7 @@ class PatientReport(Base):
     hypertension_prediction = Column(String(64), nullable=True)
     heart_disease_prediction = Column(String(64), nullable=True)
     risk_level = Column(String(64), nullable=True)
+    probability = Column(Float, nullable=True)
     
     abnormal_count = Column(Integer, nullable=True)
     abnormal_json = Column(JSON, nullable=True)
@@ -213,7 +217,7 @@ class PatientReport(Base):
     user = relationship("User", back_populates="patient_reports")
 
 class CbcReport(Base):
-    __tablename__ = "Cbc_Reports"
+    __tablename__ = "cbc_reports"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -221,22 +225,67 @@ class CbcReport(Base):
     
     cbc_json = Column(JSON, nullable=True)
     interpretation_json = Column(JSON, nullable=True)
+    probability = Column(Float, nullable=True)
     source = Column(String(32), nullable=True)
 
     user = relationship("User", back_populates="cbc_reports")
 
+class HeartReport(Base):
+    __tablename__ = "heart_reports"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    age = Column(Integer, nullable=True)
+    sex = Column(Integer, nullable=True)
+    cp = Column(Integer, nullable=True)
+    trestbps = Column(Integer, nullable=True)
+    chol = Column(Integer, nullable=True)
+    fbs = Column(Integer, nullable=True)
+    restecg = Column(Integer, nullable=True)
+    thalach = Column(Integer, nullable=True)
+    exang = Column(Integer, nullable=True)
+    oldpeak = Column(Float, nullable=True)
+    slope = Column(Integer, nullable=True)
+    ca = Column(Integer, nullable=True)
+    thal = Column(Integer, nullable=True)
+
+    prediction = Column(String(64), nullable=True)
+    probability = Column(Float, nullable=True)
+
+    user = relationship("User", back_populates="heart_reports")
+
+class HypertensionReport(Base):
+    __tablename__ = "hypertension_reports"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    age = Column(Integer, nullable=True)
+    sex = Column(Integer, nullable=True)
+    bmi = Column(Float, nullable=True)
+    heart_rate = Column(Integer, nullable=True)
+    activity_level = Column(Integer, nullable=True)
+    smoker = Column(Integer, nullable=True)
+    family_history = Column(Integer, nullable=True)
+
+    prediction = Column(String(64), nullable=True)
+    probability = Column(Float, nullable=True)
+
+    user = relationship("User", back_populates="hypertension_reports")
 
 class VerificationCode(Base):
     __tablename__ = "verification_codes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    target_type = Column(Enum('email', 'mobile'), nullable=False)
+    target_type = Column(Enum('email', 'mobile', name='verification_target_enum'), nullable=False)
     target_value = Column(String(255), nullable=False)
     code = Column(String(6), nullable=False)
     is_verified = Column(Integer, default=0)
     expires_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
 
 class ModelRegistry(Base):
     __tablename__ = "model_registry"
@@ -250,11 +299,10 @@ class ModelRegistry(Base):
     recall = Column(Float, nullable=True)
     f1_score = Column(Float, nullable=True)
     auc_roc = Column(Float, nullable=True)
-    status = Column(Enum('Active', 'Training', 'Deprecated', 'Idle'), default='Active')
+    status = Column(Enum('Active', 'Training', 'Deprecated', 'Idle', name='model_status_enum'), default='Active')
     inference_count = Column(Integer, default=0)
     last_trained = Column(DateTime(timezone=True), server_default=func.now())
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
@@ -267,7 +315,6 @@ class AuditLog(Base):
     status = Column(String(32), default="Success")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-
 class ChatConversation(Base):
     __tablename__ = "chat_conversations"
 
@@ -277,16 +324,14 @@ class ChatConversation(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     conversation_id = Column(Integer, ForeignKey("chat_conversations.id", ondelete="CASCADE"), nullable=False)
-    sender = Column(Enum('user', 'assistant'), nullable=False)
+    sender = Column(Enum('user', 'assistant', name='chat_sender_enum'), nullable=False)
     message = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
 
 class PasswordResetOTP(Base):
     __tablename__ = "password_reset_otp"
@@ -300,6 +345,3 @@ class PasswordResetOTP(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
     ip_address = Column(String(45), nullable=True)
     user_agent = Column(String(255), nullable=True)
-
-
-

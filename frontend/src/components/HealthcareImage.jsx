@@ -55,13 +55,13 @@ const HealthcareImage = ({
             <div className="w-10 h-10 rounded-xl bg-teal-500/20 backdrop-blur-md border border-teal-400/30 flex items-center justify-center text-teal-300">
               <ShieldCheck size={20} />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-teal-300 bg-teal-500/10 px-2 py-1 rounded">
+            <span className="text-xs font-bold uppercase tracking-wider text-teal-300 bg-teal-500/10 px-2.5 py-1 rounded-md">
               Health Analyzer AI
             </span>
           </div>
           <div>
             <h4 className="text-sm font-bold text-white tracking-tight">{alt}</h4>
-            <p className="text-[11px] text-teal-200/80 mt-0.5">Verified Medical Visual</p>
+            <p className="text-xs text-teal-200/90 mt-0.5">Verified Medical Visual</p>
           </div>
         </div>
       )}
@@ -76,13 +76,13 @@ const HealthcareImage = ({
 
       {/* Floating Glassmorphism Badge */}
       {badgeText && (
-        <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-lg border border-slate-100/80 flex items-center justify-between z-10">
+        <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl shadow-lg border border-slate-100/80 flex items-center justify-between z-10">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-[11px] font-extrabold text-slate-800 tracking-tight">{badgeText}</span>
+            <span className="text-xs font-extrabold text-slate-800 tracking-tight">{badgeText}</span>
           </div>
           {badgeSubtext && (
-            <span className="text-[10px] font-bold text-[#0F9D8A] bg-teal-50 px-2 py-0.5 rounded">
+            <span className="text-xs font-bold text-[#0F9D8A] bg-teal-50 px-2.5 py-1 rounded-md">
               {badgeSubtext}
             </span>
           )}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Mail, AlertCircle, ArrowLeft, Send, CheckCircle2, ShieldPlus, Activity } from 'lucide-react';
 import passwordResetService from '../services/passwordResetService';
 
@@ -10,6 +10,10 @@ const ForgotPassword = () => {
   const [message, setMessage] = useState({ text: '', type: '' });
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const portal = searchParams.get('portal') || 'patient';
+  const backLoginUrl = portal === 'doctor' ? '/doctor/login' : portal === 'admin' ? '/admin/login' : '/patient/login';
+  const portalLabel = portal === 'doctor' ? 'Doctor Portal' : portal === 'admin' ? 'Admin Portal' : 'Patient Portal';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,8 +31,8 @@ const ForgotPassword = () => {
         sessionStorage.setItem('health_reset_email', email.trim());
 
         setTimeout(() => {
-          navigate('/verify-otp', {
-            state: { email: email.trim() }
+          navigate(`/verify-otp?portal=${portal}`, {
+            state: { email: email.trim(), portal }
           });
         }, 1200);
       } else {
@@ -123,8 +127,8 @@ const ForgotPassword = () => {
           </form>
 
           <div className="mt-6 text-center">
-            <Link to="/login" className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-wider">
-              <ArrowLeft size={14} /> Back to Login
+            <Link to={backLoginUrl} className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-wider">
+              <ArrowLeft size={14} /> Back to {portalLabel}
             </Link>
           </div>
         </div>

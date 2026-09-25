@@ -32,6 +32,11 @@ class User(BaseModel):
     role: str
     blood_group: str
     mobile_no: str
+    email_verified: Optional[int] = 1
+    mobile_verified: Optional[int] = 1
+    profile_data: Optional[dict] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)

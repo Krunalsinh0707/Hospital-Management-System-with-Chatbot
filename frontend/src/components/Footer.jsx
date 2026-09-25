@@ -22,7 +22,7 @@ const Footer = () => (
 
       {/* Product */}
       <div className="footer-col">
-        <h4>Product</h4>
+        <h3 className="footer-col-title">Product</h3>
         <ul>
           <li><a href="#">Features</a></li>
           <li><a href="#">Pricing</a></li>
@@ -34,7 +34,7 @@ const Footer = () => (
 
       {/* Company */}
       <div className="footer-col">
-        <h4>Company</h4>
+        <h3 className="footer-col-title">Company</h3>
         <ul>
           <li><a href="#">About Us</a></li>
           <li><a href="#">Careers</a></li>
@@ -44,9 +44,20 @@ const Footer = () => (
         </ul>
       </div>
 
+      {/* Access Portals */}
+      <div className="footer-col">
+        <h3 className="footer-col-title">Portals</h3>
+        <ul>
+          <li><a href="/patient/login">Patient Login</a></li>
+          <li><a href="/doctor/login">Doctor Portal</a></li>
+          <li><a href="/admin/login">Admin Console</a></li>
+          <li><a href="/register">Patient Registration</a></li>
+        </ul>
+      </div>
+
       {/* Legal */}
       <div className="footer-col">
-        <h4>Legal & Support</h4>
+        <h3 className="footer-col-title">Legal & Support</h3>
         <ul>
           <li><a href="#">Privacy Policy</a></li>
           <li><a href="#">Terms of Service</a></li>

@@ -756,6 +756,7 @@ const AdminPage = () => {
         <div className="admin-content-wrap custom-scrollbar">
           <Routes>
             <Route path="/" element={<AdminOverview patients={patients} metrics={metrics} loading={loading} fetchData={fetchData} />} />
+            <Route path="/dashboard" element={<AdminOverview patients={patients} metrics={metrics} loading={loading} fetchData={fetchData} />} />
             <Route path="/patients" element={<PatientDirectory patients={patients} />} />
             <Route path="/models" element={<ModelMonitoring />} />
             <Route path="/alerts" element={<RiskAlertsCenter patients={patients} />} />

@@ -49,18 +49,12 @@
 
 /* ── HERO ── */
 .hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 48px 8% 40px;
-  gap: 48px;
   position: relative;
   z-index: 1;
 }
 
 .hero-content {
-  flex: 1;
-  max-width: 600px;
+  width: 100%;
 }
 
 .hero-actions {
@@ -70,16 +64,62 @@
 }
 
 .hero-btn {
-  padding: 14px 28px;
-  font-size: 0.95rem;
+  padding: 12px 24px;
+  font-size: 0.875rem;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  border-radius: 12px;
 }
 
 .hero-visual {
-  flex: 1;
   position: relative;
+  width: 100%;
+}
+
+/* ── UNIFIED BUTTON TOKENS ── */
+.btn-unified {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.btn-unified-primary {
+  background-color: #0F9D8A;
+  color: #ffffff;
+}
+.btn-unified-primary:hover {
+  background-color: #0d8b7a;
+  box-shadow: 0 6px 16px rgba(15, 157, 138, 0.25);
+}
+
+.btn-unified-secondary {
+  background-color: #ffffff;
+  color: #0F172A;
+  border: 1px solid #e2e8f0;
+}
+.btn-unified-secondary:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.btn-unified-emergency {
+  background-color: #e11d48;
+  color: #ffffff;
+}
+.btn-unified-emergency:hover {
+  background-color: #be123c;
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.25);
 }
 
 /* ── SECTION COMMON ── */
