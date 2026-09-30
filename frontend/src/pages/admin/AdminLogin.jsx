@@ -68,7 +68,7 @@ const AdminLogin = () => {
             <Shield size={22} />
           </div>
           <div>
-            <span className="text-base font-black tracking-tight text-white block leading-tight">HEALTH ANALYZER</span>
+            <span className="text-base font-black tracking-tight text-white block leading-tight">MEDINEXUS</span>
             <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block">Administration Gateway</span>
           </div>
         </Link>
@@ -127,7 +127,7 @@ const AdminLogin = () => {
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="admin@healthanalyzer.com"
+                  placeholder="admin@medinexus.org"
                   className="w-full bg-slate-900/90 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-sm font-semibold text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-colors"
                 />
               </div>
@@ -215,7 +215,7 @@ const AdminLogin = () => {
 
       {/* Footer */}
       <footer className="text-center text-[11px] font-mono text-slate-600 py-3 relative z-10">
-        HEALTH ANALYZER CONTROL NODE &middot; STRICT ROLE-BASED ACCESS CONTROL
+        MEDINEXUS CONTROL NODE &middot; STRICT ROLE-BASED ACCESS CONTROL
       </footer>
     </div>
   );

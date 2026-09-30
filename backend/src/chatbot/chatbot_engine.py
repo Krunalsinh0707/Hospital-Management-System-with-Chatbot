@@ -9,7 +9,12 @@ from src.chatbot.memory_service import (
     save_chat_message,
     update_conversation_title
 )
+from src.database import SessionLocal
+from src.clinical_chat.intent_service import intent_service
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 EMERGENCY_KEYWORDS = [
     r"\bchest\s*pain\b", r"\bshortness\s*of\s*breath\b", r"\bdifficulty\s*breathing\b",
@@ -57,20 +62,11 @@ def process_chat_message(user_id: int, user_message: str, conversation_id: Optio
         print(f"[WARNING] Session memory error: {e}")
         conversation_id = conversation_id or 1
 
-    # 3. Retrieve DB Medical Context & RAG Vector Chunks safely
-    try:
-        medical_context = build_patient_medical_context(user_id)
-    except Exception as e:
-        print(f"[WARNING] Context builder error: {e}")
-        medical_context = "Patient lab records on file."
+    # 3. Retrieve DB Medical Context safely (RAG removed from chatbot response path)
+    medical_context = "Patient medical records on file."
+    rag_chunks = []
 
-    try:
-        rag_chunks = vector_store.query_relevant_chunks(user_id, user_message, n_results=3)
-    except Exception as e:
-        print(f"[WARNING] RAG vector search error: {e}")
-        rag_chunks = []
-
-    # 4. Build System Prompt
+    # 4. Build System Prompt (RAG removed)
     system_prompt = build_system_prompt(medical_context, rag_chunks)
 
     # 5. Fetch Session Chat History for Multi-Turn Context
@@ -79,14 +75,34 @@ def process_chat_message(user_id: int, user_message: str, conversation_id: Optio
     except Exception:
         history_messages = []
 
-    # 6. Execute LLM Provider with automatic fallback
+    # 6. Intent Understanding & Execution or LLM Generation
+    assistant_response = None
     try:
-        provider = get_llm_provider()
-        assistant_response = provider.generate_response(system_prompt, user_message, history_messages)
+        db = SessionLocal()
+        try:
+            formatted_history = [{"sender": m.get("sender"), "body": m.get("message")} for m in history_messages]
+            assistant_response = intent_service.process_intent(
+                db=db,
+                patient_id=user_id,
+                message_text=user_message,
+                conv_history=formatted_history
+            )
+        finally:
+            db.close()
     except Exception as e:
-        print(f"[WARNING] LLM Provider exception: {e}. Executing clinical fallback.")
-        fallback = OfflineClinicalProvider()
-        assistant_response = fallback.generate_response(system_prompt, user_message, history_messages)
+        logger.error(f"[ERROR] Intent processing error in legacy engine: {e}", exc_info=True)
+
+    if not assistant_response:
+        try:
+            provider = get_llm_provider()
+            assistant_response = provider.generate_response(system_prompt, user_message, history_messages)
+        except Exception as e:
+            logger.error(f"[WARNING] LLM Provider exception: {e}. Executing clinical fallback.", exc_info=True)
+            fallback = OfflineClinicalProvider()
+            assistant_response = fallback.generate_response(system_prompt, user_message, history_messages)
+
+    if not assistant_response:
+        assistant_response = "I'm having trouble processing that request right now. Please try again."
 
     # 7. Persist Messages to Memory safely
     try:

@@ -29,7 +29,7 @@ class GeminiProvider(BaseLLMProvider):
             raise ValueError("GEMINI_API_KEY is not configured in backend environment or .env file")
 
         # Try designated model first, with fallback models if needed
-        model_candidates = [self.model_name, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-pro"]
+        model_candidates = [self.model_name, "gemini-3.8-flash", "gemini-2.5-flash", "gemini-flash-latest"]
         model_candidates = list(dict.fromkeys(model_candidates))  # Deduplicate
 
         prompt_parts = [f"SYSTEM INSTRUCTIONS:\n{system_prompt}\n"]
@@ -145,9 +145,22 @@ class OfflineClinicalProvider(BaseLLMProvider):
                 "• **Systolic Target:** Under 120-130 mmHg\n"
                 "• **Clinical Recommendation:** Limit sodium intake to under 2,000 mg/day, engage in low-impact cardio, and monitor resting pulse."
             )
+        if any(w in msg_lower for w in ["memory", "cognitive", "brain", "neuro", "headache", "dizziness"]):
+            return (
+                "Regarding your neurological and cognitive health inquiry:\n\n"
+                "• **Key Considerations:** Memory lapses, brain fog, or concentration changes are frequently tied to sleep quality, stress, Vitamin B12 deficiency, or thyroid levels.\n"
+                "• **Recommended Action:** We recommend consulting our **Neurology** department for evaluation.\n"
+                "• Would you like me to check available appointment slots with a neurologist?"
+            )
+        if any(w in msg_lower for w in ["appointment", "book", "schedule", "doctor", "visit"]):
+            return (
+                "I can assist you with scheduling and managing appointments.\n\n"
+                "Please tell me which department (such as **Cardiology**, **Neurology**, **Orthopedics**, or **General Medicine**) you would like to visit, and I will show available specialists and time slots."
+            )
         return (
-            "I am your Health Analyzer Clinical Decision Assistant.\n\n"
-            "Your registered medical profile and diagnostic reports are loaded. How can I assist you with specific questions regarding your CBC, Diabetes, or Heart health results?"
+            "I'm HealthBot, your hospital clinical assistant.\n\n"
+            "I can help you review your lab reports (CBC, Diabetes, Cardiac), explore departments, and schedule doctor consultations.\n\n"
+            "How can I assist you with your health or hospital care today?"
         )
 
 def get_llm_provider() -> BaseLLMProvider:

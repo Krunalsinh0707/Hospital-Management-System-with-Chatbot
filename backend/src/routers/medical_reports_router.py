@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 from src.database import get_db
-from src.models import MedicalReport, ReportExtraction, AIAnalysis, DoctorReview, Doctor, Department, User, Notification
+from src.models import MedicalReport, ReportExtraction, AIAnalysis, DoctorReview, Doctor, Department, User, Notification, ReportReviewRequest
 from src.auth import get_current_user
 from src.pdf_service import extract_parameters_from_pdf
 from src.ml.ai_analyzer import run_ai_pre_analysis
@@ -29,6 +29,10 @@ class DoctorReviewCreate(BaseModel):
     final_assessment: Optional[str] = None
     corrected_parameters: Optional[dict] = None
 
+class RequestReportReviewModel(BaseModel):
+    doctor_id: Optional[int] = None
+    notes: Optional[str] = None
+
 @router.get("/my")
 def get_my_reports(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     reports = db.query(MedicalReport).filter(MedicalReport.patient_id == current_user.user_id).order_by(MedicalReport.created_at.desc()).all()
@@ -42,13 +46,33 @@ def get_my_reports(db: Session = Depends(get_db), current_user=Depends(get_curre
         review = db.query(DoctorReview).filter(DoctorReview.report_id == r.id).first()
         ext = db.query(ReportExtraction).filter(ReportExtraction.report_id == r.id).first()
 
+        review_req = db.query(ReportReviewRequest).filter(
+            ReportReviewRequest.report_id == r.id
+        ).order_by(ReportReviewRequest.created_at.desc()).first()
+
+        review_request_info = None
+        if review_req:
+            req_doc = db.query(Doctor).filter(Doctor.id == review_req.doctor_id).first()
+            req_doc_user = db.query(User).filter(User.id == req_doc.user_id).first() if req_doc else None
+            review_request_info = {
+                "id": review_req.id,
+                "status": review_req.status,
+                "doctor_id": review_req.doctor_id,
+                "doctor_name": f"Dr. {req_doc_user.full_name}" if req_doc_user else "Physician",
+                "notes": review_req.notes,
+                "created_at": review_req.created_at.strftime("%Y-%m-%d %H:%M") if review_req.created_at else "",
+                "completed_at": review_req.completed_at.strftime("%Y-%m-%d %H:%M") if review_req.completed_at else ""
+            }
+
         result.append({
             "id": r.id,
             "report_source": r.report_source,
             "report_title": r.report_title,
             "report_type": r.report_type,
-            "report_date": r.report_date.strftime("%Y-%m-%d"),
+            "report_date": r.report_date.strftime("%Y-%m-%d") if r.report_date else (r.created_at.strftime("%Y-%m-%d") if r.created_at else ""),
             "department_name": dept.name if dept else "General",
+            "department_id": r.department_id,
+            "doctor_id": r.doctor_id,
             "doctor_name": doc_user.full_name if doc_user else "Hospital Medical Staff",
             "status": r.status,
             "original_filename": r.original_filename,
@@ -65,7 +89,8 @@ def get_my_reports(db: Session = Depends(get_db), current_user=Depends(get_curre
                 "clinical_notes": review.clinical_notes,
                 "final_assessment": review.final_assessment,
                 "reviewed_at": review.reviewed_at.strftime("%Y-%m-%d %H:%M")
-            } if review else None
+            } if review else None,
+            "review_request": review_request_info
         })
     return result
 
@@ -253,8 +278,12 @@ def get_reports_pending_review(db: Session = Depends(get_db), current_user=Depen
 
 @router.get("/patient/{patient_id}")
 def get_patient_reports_for_doctor(patient_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    user_role = (current_user.role or "").lower()
+    if user_role in ['patient', 'user'] and current_user.user_id != patient_id:
+        raise HTTPException(status_code=403, detail="Access denied: Cannot access another patient's reports")
+
     doctor = db.query(Doctor).filter(Doctor.user_id == current_user.user_id).first()
-    if not doctor and current_user.role not in ['admin', 'hospital_admin', 'doctor', 'emergency_doctor'] and current_user.user_id != patient_id:
+    if not doctor and user_role not in ['admin', 'hospital_admin', 'doctor', 'emergency_doctor'] and current_user.user_id != patient_id:
         raise HTTPException(status_code=403, detail="Clinical authorization required")
 
     reports = db.query(MedicalReport).filter(MedicalReport.patient_id == patient_id).order_by(MedicalReport.created_at.desc()).all()
@@ -325,6 +354,16 @@ def review_report(report_id: int, review_data: DoctorReviewCreate, db: Session =
     report.status = "DOCTOR_REVIEWED" if review_data.review_status == "APPROVED" else "FINALIZED"
     report.doctor_id = doctor.id if doctor else report.doctor_id
 
+    # Mark any pending ReportReviewRequest as COMPLETED
+    from src.models import ReportReviewRequest
+    pending_reqs = db.query(ReportReviewRequest).filter(
+        ReportReviewRequest.report_id == report_id,
+        ReportReviewRequest.status == "PENDING"
+    ).all()
+    for pr in pending_reqs:
+        pr.status = "COMPLETED"
+        pr.completed_at = datetime.utcnow()
+
     # Notify patient
     notif = Notification(
         user_id=report.patient_id,
@@ -336,3 +375,20 @@ def review_report(report_id: int, review_data: DoctorReviewCreate, db: Session =
 
     db.commit()
     return {"message": "Doctor review finalized successfully"}
+
+
+@router.post("/{report_id}/request-review")
+def request_report_review(
+    report_id: int, 
+    data: Optional[RequestReportReviewModel] = None, 
+    db: Session = Depends(get_db), 
+    current_user = Depends(get_current_user)
+):
+    from src.clinical_chat.clinical_actions import create_report_review_request
+    doc_id = data.doctor_id if data else None
+    notes = data.notes if data else None
+    res = create_report_review_request(db, current_user.user_id, report_id, doc_id, notes)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("message", "Failed to submit report for review"))
+    return res
+

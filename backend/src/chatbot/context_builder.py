@@ -73,15 +73,17 @@ def build_patient_medical_context(user_id: int) -> str:
         cursor.execute("SELECT * FROM cbc_reports WHERE user_id = %s ORDER BY created_at DESC LIMIT 1", (user_id,))
         cbc_row = cursor.fetchone()
         if cbc_row and cbc_row.get("interpretation_json"):
-            interp = json.loads(cbc_row["interpretation_json"])
-            cbc_vals = json.loads(cbc_row.get("cbc_json", "{}")) if cbc_row.get("cbc_json") else {}
+            raw_interp = cbc_row.get("interpretation_json")
+            interp = json.loads(raw_interp) if isinstance(raw_interp, str) else (raw_interp or {})
+            raw_cbc = cbc_row.get("cbc_json")
+            cbc_vals = json.loads(raw_cbc) if isinstance(raw_cbc, str) else (raw_cbc or {})
             context_lines.append("### LATEST COMPLETE BLOOD COUNT (CBC)")
             context_lines.append(f"- Health Score: {interp.get('health_score', 'N/A')}/100")
             context_lines.append(f"- Clinical Urgency: {interp.get('urgency', 'N/A')}")
-            context_lines.append(f"- Abnormal Parameter Flags: {', '.join(interp.get('flags', [])) or 'None (All Normal)'}")
+            context_lines.append(f"- Abnormal Parameter Flags: {', '.join(interp.get('flags', [])) if isinstance(interp.get('flags'), list) else 'None (All Normal)'}")
             context_lines.append(f"- Hematology Pattern Prediction: {interp.get('ml_prediction', 'N/A')}")
             if cbc_vals:
-                context_lines.append(f"- Key Values: {json.dumps(cbc_vals)}")
+                context_lines.append(f"- Key Values: {json.dumps(cbc_vals) if isinstance(cbc_vals, dict) else str(cbc_vals)}")
             context_lines.append("")
 
         if len(context_lines) <= 2:

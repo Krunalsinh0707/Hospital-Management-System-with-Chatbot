@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -28,6 +28,10 @@
   --color-primary-clinical: var(--primary-clinical);
   --color-bg-clinical: var(--bg-clinical);
   --color-text-primary: var(--text-primary);
+}
+
+.font-editorial {
+  font-family: 'Newsreader', Georgia, Cambria, 'Times New Roman', serif;
 }
 
 html {
@@ -115,6 +119,10 @@ p { @apply text-[14px] leading-relaxed; }
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+.font-editorial {
+  font-family: 'Newsreader', 'Lora', Georgia, 'Times New Roman', serif;
 }
 
 

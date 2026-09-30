@@ -68,7 +68,7 @@ const DoctorLogin = () => {
             <Stethoscope size={22} />
           </div>
           <div>
-            <span className="text-base font-black tracking-tight text-white block leading-tight">HEALTH ANALYZER</span>
+            <span className="text-base font-black tracking-tight text-white block leading-tight">MEDINEXUS</span>
             <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest block">Clinical Workstation</span>
           </div>
         </Link>
@@ -127,7 +127,7 @@ const DoctorLogin = () => {
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="doctor@healthanalyzer.com"
+                  placeholder="doctor@medinexus.org"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F9D8A]/20 focus:border-[#0F9D8A] transition-colors"
                 />
               </div>
@@ -215,7 +215,7 @@ const DoctorLogin = () => {
 
       {/* Footer */}
       <footer className="text-center text-[11px] font-medium text-slate-500 py-3 relative z-10">
-        Clinical Diagnostic & Treatment Gateway &middot; SRL-3 Certified &middot; AES-256 Protected
+        MediNexus Clinical Workstation &middot; Authorized Medical Personnel Access Only
       </footer>
     </div>
   );

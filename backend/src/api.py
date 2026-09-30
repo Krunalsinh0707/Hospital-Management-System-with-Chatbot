@@ -33,7 +33,8 @@ from src.routers import (
     communication_router,
     analytics_router,
     notifications_router,
-    model_registry_router
+    model_registry_router,
+    clinical_chat_router
 )
 
 def create_default_admin():
@@ -118,6 +119,7 @@ app.include_router(communication_router.router)
 app.include_router(analytics_router.router)
 app.include_router(notifications_router.router)
 app.include_router(model_registry_router.router)
+app.include_router(clinical_chat_router.router)
 
 from sqlalchemy import text
 from src.database import get_db

@@ -179,7 +179,7 @@ const OwnReportFlow = () => {
                     UPLOAD REPORT
                   </h3>
                   <p className="text-xs text-slate-500 font-medium leading-relaxed mt-2">
-                    Upload a PDF or image scan. Health Analyzer OCR will extract parameters automatically without manual typing.
+                    Upload a PDF or image scan. MediNexus OCR will extract parameters automatically without manual typing.
                   </p>
                 </div>
               </div>

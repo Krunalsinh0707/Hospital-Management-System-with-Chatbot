@@ -46,7 +46,7 @@ async def upload_cbc_report(file: UploadFile = File(...), current_user=Depends(g
     
     # Auto-index extracted CBC document into ChromaDB vector store for RAG
     try:
-        from src.chatbot.vector_store import vector_store
+        from src.clinical_chat.vector_store import vector_store
         text_summary = f"Uploaded CBC Report '{file.filename}': Extracted Hematology Data: {json.dumps(cbc_data)} | Health Score: {interpretation.get('health_score')}/100 | Urgency: {interpretation.get('urgency')}"
         vector_store.add_document_chunks(
             user_id=current_user.user_id,

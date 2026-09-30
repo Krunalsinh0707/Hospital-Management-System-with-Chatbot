@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, X, History as HistoryIcon, Plus, Sparkles } from 'lucide-react';
-import api from '../../services/api';
+import { Bot, X, Minus, History as HistoryIcon, Plus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import clinicalChatService from '../../services/clinicalChatService';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import SuggestedQuestions from './SuggestedQuestions';
@@ -18,14 +18,14 @@ const ChatbotDrawer = () => {
   const [messages, setMessages] = useState([
     {
       sender: 'assistant',
-      text: "Hello! I am HealthBot, your AI healthcare decision support assistant. Ask me anything about your recent lab reports, CBC findings, or physiological risk scores!",
+      text: "Hello! I'm HealthBot. How can I help you today?",
       time: "Just now"
     }
   ]);
   const [inputMsg, setInputMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Fetch conversation sessions when drawer opens
+  // Fetch consultation sessions when drawer opens
   useEffect(() => {
     if (user && isOpen) {
       fetchConversations();
@@ -34,10 +34,14 @@ const ChatbotDrawer = () => {
 
   const fetchConversations = async () => {
     try {
-      const res = await api.get('/chatbot/conversations');
-      setConversations(res.data.conversations || []);
+      const data = await clinicalChatService.getMyConversations();
+      setConversations(data || []);
+      // If no active conversation yet and conversations exist, select the latest
+      if (!activeConvId && data && data.length > 0) {
+        // Keep activeConvId null initially unless user selects it or sends message
+      }
     } catch (err) {
-      console.error("Failed to load conversations", err);
+      console.error("Failed to load consultations", err);
     }
   };
 
@@ -45,17 +49,17 @@ const ChatbotDrawer = () => {
     setActiveConvId(convId);
     setLoading(true);
     try {
-      const res = await api.get(`/chatbot/conversations/${convId}/messages`);
-      if (res.data.messages && res.data.messages.length > 0) {
-        setMessages(res.data.messages.map(m => ({
-          sender: m.sender,
-          text: m.message,
+      const msgs = await clinicalChatService.getConversationMessages(convId);
+      if (msgs && msgs.length > 0) {
+        setMessages(msgs.map(m => ({
+          sender: m.sender_type === 'patient' ? 'user' : 'assistant',
+          text: m.body,
           time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         })));
       } else {
         setMessages([{
           sender: 'assistant',
-          text: "New chat session started. Ask me any question grounded in your lab records!",
+          text: "Hello! I'm HealthBot. How can I help you today?",
           time: "Just now"
         }]);
       }
@@ -68,34 +72,33 @@ const ChatbotDrawer = () => {
 
   const handleNewSession = async () => {
     try {
-      const res = await api.post('/chatbot/conversations', { title: "New Health Conversation" });
-      const newConv = res.data.conversation;
+      const newConv = await clinicalChatService.createConversation({ title: "Health Consultation" });
       setActiveConvId(newConv.id);
       setMessages([{
         sender: 'assistant',
-        text: "New chat session initialized. How can I assist you with your health records today?",
+        text: "Hello! I'm HealthBot. How can I help you today?",
         time: "Just now"
       }]);
       fetchConversations();
     } catch (err) {
-      console.error("Failed to create new session", err);
+      console.error("Failed to create new consultation session", err);
     }
   };
 
   const handleDeleteSession = async (convId) => {
     try {
-      await api.delete(`/chatbot/conversations/${convId}`);
+      await clinicalChatService.deleteConversation(convId);
       if (activeConvId === convId) {
         setActiveConvId(null);
         setMessages([{
           sender: 'assistant',
-          text: "Session cleared. Start a new question anytime!",
+          text: "Hello! I'm HealthBot. How can I help you today?",
           time: "Just now"
         }]);
       }
       fetchConversations();
     } catch (err) {
-      console.error("Failed to delete conversation", err);
+      console.error("Failed to delete consultation session", err);
     }
   };
 
@@ -113,29 +116,38 @@ const ChatbotDrawer = () => {
     setLoading(true);
 
     try {
-      const payload = { message: query };
-      if (activeConvId) {
-        payload.conversation_id = activeConvId;
+      if (!activeConvId) {
+        const title = query.length > 35 ? query.substring(0, 35) + "..." : query;
+        const newConv = await clinicalChatService.createConversation({
+          title,
+          initial_message: query
+        });
+        setActiveConvId(newConv.id);
+        await fetchConversations();
+        const msgs = await clinicalChatService.getConversationMessages(newConv.id);
+        if (msgs && msgs.length > 0) {
+          setMessages(msgs.map(m => ({
+            sender: m.sender_type === 'patient' ? 'user' : 'assistant',
+            text: m.body,
+            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          })));
+        }
+        return;
       }
 
-      const response = await api.post('/chatbot/message', payload);
-
-      if (response.data.conversation_id && response.data.conversation_id !== activeConvId) {
-        setActiveConvId(response.data.conversation_id);
-        fetchConversations();
-      }
-
+      const response = await clinicalChatService.sendMessage(activeConvId, query);
+      const botText = response.assistant_message?.body || "I have received your message.";
       const botMessage = {
         sender: 'assistant',
-        text: response.data.response,
-        time: response.data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        text: botText,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        clarification_options: response.clarification_options,
+        workflow_state: response.workflow_state
       };
       setMessages(prev => [...prev, botMessage]);
     } catch (err) {
       console.error("Chatbot request error:", err.response?.data || err.message);
-      const errorMsg = err.response?.data?.detail 
-        ? `API Error: ${err.response.data.detail}`
-        : "I experienced a connection issue querying your records. Please try asking again.";
+      const errorMsg = "I'm having trouble processing that request right now. Please try again.";
       setMessages(prev => [...prev, {
         sender: 'assistant',
         text: errorMsg,
@@ -149,43 +161,28 @@ const ChatbotDrawer = () => {
   if (!user) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      {/* FLOATING TRIGGER BUTTON */}
-      {!isOpen && (
-        <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.94 }}
-          onClick={() => setIsOpen(true)}
-          className="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl flex items-center gap-3 hover:bg-slate-800 transition-all border border-slate-700"
-        >
-          <div className="relative">
-            <Bot size={24} className="text-[#0F9D8A]" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
-          </div>
-          <span className="text-xs font-black uppercase tracking-wider hidden sm:inline">Ask HealthBot</span>
-        </motion.button>
-      )}
-
-      {/* CHAT DRAWER PANEL */}
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-auto">
+      {/* FLOATING CHAT PANEL */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.95 }}
-            className="relative w-[92vw] sm:w-[420px] h-[580px] max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden"
+            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="mb-3 w-[calc(100vw-2rem)] sm:w-[420px] h-[580px] max-h-[calc(100vh-120px)] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
           >
-            {/* DRAWER HEADER */}
-            <div className="bg-slate-900 p-4 text-white flex items-center justify-between z-10">
+            {/* PANEL HEADER */}
+            <div className="bg-slate-900 px-4 py-3 text-white flex items-center justify-between z-10 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-[#0F9D8A]">
                   <Bot size={22} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black tracking-tight">HealthBot AI Assistant</h3>
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
-                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                    <span>RAG Clinical Context Active</span>
+                  <h3 className="text-sm font-black tracking-tight text-white">HealthBot</h3>
+                  <div className="flex items-center gap-1.5 text-[11px] text-teal-400 font-semibold">
+                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                    <span>Hospital Assistant</span>
                   </div>
                 </div>
               </div>
@@ -193,23 +190,35 @@ const ChatbotDrawer = () => {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setShowHistory(!showHistory)}
-                  className="p-2 text-slate-400 hover:text-white rounded-lg transition-colors"
-                  title="Chat History"
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors"
+                  title="Chat Sessions"
+                  aria-label="Chat Sessions"
                 >
                   <HistoryIcon size={18} />
                 </button>
                 <button
                   onClick={handleNewSession}
-                  className="p-2 text-slate-400 hover:text-white rounded-lg transition-colors"
-                  title="New Chat"
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors"
+                  title="New Consultation"
+                  aria-label="New Consultation"
                 >
                   <Plus size={18} />
                 </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors"
+                  title="Minimize"
+                  aria-label="Minimize"
+                >
+                  <Minus size={18} />
+                </button>
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="p-2 text-slate-400 hover:text-white rounded-lg transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors"
+                  title="Close"
+                  aria-label="Close"
                 >
-                  <X size={20} />
+                  <X size={18} />
                 </button>
               </div>
             </div>
@@ -227,7 +236,7 @@ const ChatbotDrawer = () => {
             )}
 
             {/* CHAT MESSAGES WINDOW */}
-            <ChatWindow messages={messages} loading={loading} />
+            <ChatWindow messages={messages} loading={loading} onSelectOption={handleSend} />
 
             {/* SUGGESTED QUESTIONS */}
             <SuggestedQuestions onSelectQuestion={handleSend} />
@@ -242,6 +251,31 @@ const ChatbotDrawer = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* FLOATING ROUND HEALTHBOT LAUNCHER BUTTON */}
+      <div className="flex flex-col items-center">
+        <motion.button
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.94 }}
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={isOpen ? "Minimize HealthBot" : "Open HealthBot Assistant"}
+          title={isOpen ? "Minimize HealthBot" : "Open HealthBot Assistant"}
+          className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all border-2 ${
+            isOpen 
+              ? 'bg-slate-900 border-teal-400 text-teal-400 shadow-teal-500/20' 
+              : 'bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 border-teal-500/50 text-teal-400 hover:border-teal-400 shadow-slate-900/40 hover:shadow-teal-500/30'
+          }`}
+        >
+          <div className="relative flex items-center justify-center">
+            <Bot size={26} className="text-[#0F9D8A]" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+          </div>
+        </motion.button>
+        <span className="text-[10px] font-bold text-slate-700 bg-white/95 shadow-sm border border-slate-200/80 px-2 py-0.5 rounded-full mt-1.5 select-none pointer-events-none">
+          HealthBot
+        </span>
+      </div>
     </div>
   );
 };

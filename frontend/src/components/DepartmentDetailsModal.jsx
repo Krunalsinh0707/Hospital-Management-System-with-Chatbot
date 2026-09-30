@@ -171,7 +171,7 @@ const DepartmentDetailsModal = ({ isOpen, onClose, departmentSlug, departmentDat
               </div>
               <div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#0F9D8A]">
-                  HEALTH ANALYZER DEPARTMENT
+                  MEDINEXUS DEPARTMENT
                 </span>
                 <h2 className="text-base font-extrabold tracking-tight text-white leading-none mt-0.5">
                   {details?.name || initialData?.name || 'Department Details'}

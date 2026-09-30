@@ -1,12 +1,13 @@
-// Centralized Version Configuration for Health Analyzer Frontend
+// Centralized Version Configuration for MediNexus Frontend
 export const VERSION_CONFIG = {
-  projectName: "Health Analyzer Platform",
-  shortName: "Health Analyzer",
+  projectName: "MediNexus",
+  shortName: "MediNexus",
+  tagline: "AI-Powered Hospital Management & Clinical Intelligence System",
   version: "2.1.0",
-  buildNumber: "2026.08.05",
-  releaseDate: "August 2026",
+  buildNumber: "2026.09.29",
+  releaseDate: "September 2026",
   environment: "Production",
-  organization: "Health Analyzer Clinical Network",
+  organization: "MediNexus Clinical Network",
   disclaimer: "Informational AI Decision Support System. Not a substitute for formal medical advice."
 };
 

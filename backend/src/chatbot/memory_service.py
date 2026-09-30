@@ -8,11 +8,12 @@ def create_conversation(user_id: int, title: str = "New Health Conversation") ->
     try:
         cursor = conn.cursor(dictionary=True)
         cursor.execute(
-            "INSERT INTO chat_conversations (user_id, title) VALUES (%s, %s)",
+            "INSERT INTO chat_conversations (user_id, title) VALUES (%s, %s) RETURNING id",
             (user_id, title)
         )
+        row = cursor.fetchone()
         conn.commit()
-        conv_id = cursor.lastrowid
+        conv_id = row.get("id") if row else None
         return {"id": conv_id, "user_id": user_id, "title": title}
     finally:
         if 'cursor' in locals(): cursor.close()

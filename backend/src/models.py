@@ -345,3 +345,193 @@ class PasswordResetOTP(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
     ip_address = Column(String(45), nullable=True)
     user_agent = Column(String(255), nullable=True)
+
+# ==========================================
+# New Clinical Chat Subsystem Models
+# ==========================================
+
+class ClinicalConversation(Base):
+    __tablename__ = "clinical_conversations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    patient_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    title = Column(String(255), default="Clinical Conversation")
+    status = Column(
+        Enum('OPEN', 'AWAITING_DOCTOR', 'DOCTOR_RESPONDED', 'ESCALATED', 'RESOLVED', name='clinical_conversation_status_enum'),
+        default='OPEN',
+        index=True
+    )
+    urgency = Column(
+        Enum('NORMAL', 'LOW_PRIORITY', 'MODERATE', 'HIGH_PRIORITY', 'EMERGENCY_REVIEW', name='clinical_urgency_enum'),
+        default='NORMAL',
+        index=True
+    )
+    department_id = Column(Integer, ForeignKey("departments.id", ondelete="SET NULL"), nullable=True, index=True)
+    assigned_doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="SET NULL"), nullable=True, index=True)
+    escalation_status = Column(
+        Enum('NONE', 'PENDING_ACK', 'ACKNOWLEDGED', 'RESOLVED', name='escalation_status_enum'),
+        default='NONE',
+        index=True
+    )
+    source_legacy_id = Column(Integer, nullable=True)
+    workflow_state = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), index=True)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+
+    patient = relationship("User", foreign_keys=[patient_id])
+    department = relationship("Department", foreign_keys=[department_id])
+    assigned_doctor = relationship("Doctor", foreign_keys=[assigned_doctor_id])
+
+    messages = relationship("ClinicalMessage", back_populates="conversation", cascade="all, delete-orphan")
+    assignments = relationship("ClinicalAssignment", back_populates="conversation", cascade="all, delete-orphan")
+    alerts = relationship("ClinicalAlert", back_populates="conversation", cascade="all, delete-orphan")
+    events = relationship("ClinicalEvent", back_populates="conversation", cascade="all, delete-orphan")
+    ai_analyses = relationship("ClinicalAIAnalysis", back_populates="conversation", cascade="all, delete-orphan")
+
+class ClinicalMessage(Base):
+    __tablename__ = "clinical_messages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(Integer, ForeignKey("clinical_conversations.id", ondelete="CASCADE"), nullable=False, index=True)
+    sender_type = Column(
+        Enum('patient', 'doctor', 'assistant', 'system', name='clinical_sender_type_enum'),
+        nullable=False
+    )
+    sender_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    body = Column(Text, nullable=False)
+    redaction_metadata = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    conversation = relationship("ClinicalConversation", back_populates="messages")
+    sender_user = relationship("User", foreign_keys=[sender_user_id])
+
+class ClinicalAssignment(Base):
+    __tablename__ = "clinical_assignments"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(Integer, ForeignKey("clinical_conversations.id", ondelete="CASCADE"), nullable=False, index=True)
+    department_id = Column(Integer, ForeignKey("departments.id", ondelete="SET NULL"), nullable=True, index=True)
+    doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="SET NULL"), nullable=True, index=True)
+    assigned_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    reason = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True, index=True)
+    assigned_at = Column(DateTime(timezone=True), server_default=func.now())
+    unassigned_at = Column(DateTime(timezone=True), nullable=True)
+
+    conversation = relationship("ClinicalConversation", back_populates="assignments")
+    department = relationship("Department")
+    doctor = relationship("Doctor")
+    assigned_by = relationship("User", foreign_keys=[assigned_by_user_id])
+
+class ClinicalAlert(Base):
+    __tablename__ = "clinical_alerts"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(Integer, ForeignKey("clinical_conversations.id", ondelete="CASCADE"), nullable=False, index=True)
+    status = Column(
+        Enum('TRIGGERED', 'ACKNOWLEDGED', 'RESOLVED', 'DISMISSED', name='clinical_alert_status_enum'),
+        default='TRIGGERED',
+        index=True
+    )
+    reason = Column(Text, nullable=False)
+    urgency = Column(
+        Enum('NORMAL', 'LOW_PRIORITY', 'MODERATE', 'HIGH_PRIORITY', 'EMERGENCY_REVIEW', name='clinical_urgency_enum'),
+        nullable=False
+    )
+    department_id = Column(Integer, ForeignKey("departments.id", ondelete="SET NULL"), nullable=True, index=True)
+    assigned_doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="SET NULL"), nullable=True, index=True)
+    dedupe_key = Column(String(100), nullable=True, index=True)
+    escalated_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    acknowledged_at = Column(DateTime(timezone=True), nullable=True)
+    acknowledged_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+
+    conversation = relationship("ClinicalConversation", back_populates="alerts")
+    department = relationship("Department")
+    assigned_doctor = relationship("Doctor")
+    acknowledged_by = relationship("User", foreign_keys=[acknowledged_by_user_id])
+
+class ClinicalEvent(Base):
+    __tablename__ = "clinical_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(Integer, ForeignKey("clinical_conversations.id", ondelete="CASCADE"), nullable=False, index=True)
+    actor_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    event_type = Column(String(64), nullable=False, index=True)
+    state_before = Column(JSON, nullable=True)
+    state_after = Column(JSON, nullable=True)
+    reason = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    conversation = relationship("ClinicalConversation", back_populates="events")
+    actor = relationship("User", foreign_keys=[actor_user_id])
+
+class ClinicalAIAnalysis(Base):
+    __tablename__ = "clinical_ai_analyses"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(Integer, ForeignKey("clinical_conversations.id", ondelete="CASCADE"), nullable=False, index=True)
+    message_id = Column(Integer, ForeignKey("clinical_messages.id", ondelete="SET NULL"), nullable=True)
+    category = Column(String(100), nullable=True)
+    confidence = Column(Float, nullable=True)
+    evidence_codes = Column(JSON, nullable=True)
+    model_rule_version = Column(String(64), default="1.0")
+    human_review_required = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    conversation = relationship("ClinicalConversation", back_populates="ai_analyses")
+    message = relationship("ClinicalMessage", foreign_keys=[message_id])
+
+class DoctorDepartmentMembership(Base):
+    __tablename__ = "doctor_department_memberships"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False, index=True)
+    department_id = Column(Integer, ForeignKey("departments.id", ondelete="CASCADE"), nullable=False, index=True)
+    role = Column(
+        Enum('MEMBER', 'RESPONDER', 'LEAD', name='doctor_dept_role_enum'),
+        default='MEMBER'
+    )
+    is_active = Column(Boolean, default=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    doctor = relationship("Doctor")
+    department = relationship("Department")
+
+class ClinicalRoutingRule(Base):
+    __tablename__ = "clinical_routing_rules"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    category_or_indicator = Column(String(100), nullable=False, index=True)
+    department_id = Column(Integer, ForeignKey("departments.id", ondelete="CASCADE"), nullable=False, index=True)
+    priority = Column(
+        Enum('NORMAL', 'LOW_PRIORITY', 'MODERATE', 'HIGH_PRIORITY', 'EMERGENCY_REVIEW', name='clinical_urgency_enum'),
+        default='NORMAL'
+    )
+    is_enabled = Column(Boolean, default=True, index=True)
+    version = Column(String(32), default="1.0")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    department = relationship("Department")
+
+class ReportReviewRequest(Base):
+    __tablename__ = "report_review_requests"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    report_id = Column(Integer, ForeignKey("medical_reports.id", ondelete="CASCADE"), nullable=False, index=True)
+    patient_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False, index=True)
+    status = Column(
+        Enum('PENDING', 'IN_REVIEW', 'COMPLETED', 'CANCELLED', name='report_review_request_status_enum'),
+        default='PENDING',
+        index=True
+    )
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    report = relationship("MedicalReport", foreign_keys=[report_id])
+    patient = relationship("User", foreign_keys=[patient_id])
+    doctor = relationship("Doctor", foreign_keys=[doctor_id])

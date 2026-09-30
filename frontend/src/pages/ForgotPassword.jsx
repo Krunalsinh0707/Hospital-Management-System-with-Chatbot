@@ -63,7 +63,7 @@ const ForgotPassword = () => {
             <Activity size={32} />
           </div>
           <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Forgot Password</h1>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Health Analyzer Credentials Recovery</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">MediNexus Credentials Recovery</p>
         </div>
 
         {/* Card */}

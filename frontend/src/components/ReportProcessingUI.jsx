@@ -26,7 +26,7 @@ const ReportProcessingUI = ({ currentStep, fileInfo }) => {
           REPORT PROCESSING & AI PIPELINE
         </h3>
         <p className="text-xs text-slate-500 max-w-sm mx-auto">
-          Health Analyzer is executing OCR extraction and routing data to the model registry.
+          MediNexus is executing OCR extraction and routing data to the model registry.
         </p>
       </div>
 

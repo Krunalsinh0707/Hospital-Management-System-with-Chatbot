@@ -56,7 +56,7 @@ const Profile = () => {
     conditions: 'None reported',
     surgeries: 'None',
     familyHistory: 'No chronic hereditary conditions',
-    preferredHospital: 'Health Analyzer Memorial Hospital',
+    preferredHospital: 'MediNexus Hospital',
     primaryDoctor: 'Dr. Aarav Shah',
     primaryDepartment: 'Cardiology'
   });
@@ -100,7 +100,7 @@ const Profile = () => {
           conditions: ext.conditions || 'None reported',
           surgeries: ext.surgeries || 'None',
           familyHistory: ext.familyHistory || 'No chronic hereditary conditions',
-          preferredHospital: ext.preferredHospital || 'Health Analyzer Memorial Hospital',
+          preferredHospital: ext.preferredHospital || 'MediNexus Hospital',
           primaryDoctor: ext.primaryDoctor || 'Dr. Aarav Shah',
           primaryDepartment: ext.primaryDepartment || 'Cardiology'
         };
@@ -1235,7 +1235,7 @@ const Profile = () => {
                       {primaryDoctorInfo?.specialization || 'Cardiology & Internal Medicine'}
                     </p>
                     <p className="text-[10px] text-slate-400">
-                      {formData.preferredHospital || 'Health Analyzer Memorial Hospital'}
+                      {formData.preferredHospital || 'MediNexus Hospital'}
                     </p>
                   </div>
                   <span className="text-[10px] font-bold px-2 py-0.5 bg-white border border-teal-200 text-teal-800 rounded-md">

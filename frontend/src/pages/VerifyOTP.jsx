@@ -152,7 +152,7 @@ const VerifyOTP = () => {
             <Activity size={32} />
           </div>
           <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Verify OTP Code</h1>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Health Analyzer Security Check</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">MediNexus Security Check</p>
         </div>
 
         <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">

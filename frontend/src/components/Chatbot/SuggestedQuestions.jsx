@@ -3,10 +3,11 @@ import { Sparkles } from 'lucide-react';
 
 const SuggestedQuestions = ({ onSelectQuestion }) => {
   const prompts = [
-    "Explain my latest CBC findings",
-    "What is my current diabetes risk level?",
-    "Give me tips for lowering blood pressure",
-    "Summarize my overall physiological health"
+    "Book an appointment",
+    "What are my upcoming appointments?",
+    "What departments do you have?",
+    "Show my latest report",
+    "What is hypertension?"
   ];
 
   return (

@@ -52,7 +52,7 @@ const AIModelsPage = () => {
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">AVAILABLE AI MEDICAL MODELS</h1>
           <p className="text-xs font-semibold text-slate-500 mt-1">
-            Health Analyzer is built on an extensible AI architecture supporting specialized diagnostic models.
+            MediNexus is built on an extensible AI architecture supporting specialized diagnostic models.
           </p>
         </div>
 

@@ -62,11 +62,10 @@ const PatientLogin = () => {
       <header className="max-w-md w-full mx-auto flex items-center justify-center gap-3 pt-4">
         <Link to="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-slate-200/80 flex items-center justify-center p-1.5 transition-transform group-hover:scale-105">
-            <img src={mainLogo} alt="Health Analyzer" className="w-full h-full object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
             <HeartPulse className="w-6 h-6 text-[#0F9D8A]" />
           </div>
           <div>
-            <span className="text-base font-black tracking-tight text-slate-900 block leading-tight">HEALTH ANALYZER</span>
+            <span className="text-base font-black tracking-tight text-slate-900 block leading-tight">MEDINEXUS</span>
             <span className="text-[10px] font-bold text-[#0F9D8A] uppercase tracking-widest block">Patient Portal</span>
           </div>
         </Link>
@@ -209,7 +208,7 @@ const PatientLogin = () => {
 
       {/* Minimal Footer */}
       <footer className="text-center text-[11px] font-medium text-slate-400 py-3">
-        &copy; {new Date().getFullYear()} Health Analyzer. Secure HIPAA & SRL-3 Compliant Platform.
+        &copy; {new Date().getFullYear()} MediNexus. AI-Powered Hospital Management &amp; Clinical Intelligence System.
       </footer>
     </div>
   );

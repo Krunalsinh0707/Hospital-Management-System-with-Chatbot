@@ -132,7 +132,7 @@ def init_db():
     """
     print("Initializing PostgreSQL database...")
     try:
-        from src.models import Base, Department
+        from src.models import Base, Department, ClinicalRoutingRule
         
         # Create all tables in PostgreSQL
         Base.metadata.create_all(bind=engine)
@@ -163,6 +163,37 @@ def init_db():
                     db.add(Department(name=name, code=code, description=desc))
                 db.commit()
                 print("Default medical departments seeded.")
+
+            # Seed default clinical routing rules if table is empty
+            rule_count = db.query(ClinicalRoutingRule).count()
+            if rule_count == 0:
+                dept_map = {d.code: d.id for d in db.query(Department).all()}
+                default_rules = [
+                    ("chest_pain", dept_map.get("EMERG", dept_map.get("CARD")), "EMERGENCY_REVIEW"),
+                    ("shortness_of_breath", dept_map.get("EMERG", dept_map.get("PULMO")), "EMERGENCY_REVIEW"),
+                    ("stroke", dept_map.get("EMERG", dept_map.get("NEURO")), "EMERGENCY_REVIEW"),
+                    ("heart_attack", dept_map.get("CARD", dept_map.get("EMERG")), "EMERGENCY_REVIEW"),
+                    ("cardiac", dept_map.get("CARD"), "HIGH_PRIORITY"),
+                    ("hypertension", dept_map.get("CARD"), "MODERATE"),
+                    ("diabetes", dept_map.get("ENDO"), "MODERATE"),
+                    ("respiratory", dept_map.get("PULMO"), "MODERATE"),
+                    ("orthopedic", dept_map.get("ORTHO"), "LOW_PRIORITY"),
+                    ("dermatology", dept_map.get("DERM"), "LOW_PRIORITY"),
+                    ("pediatric", dept_map.get("PEDI"), "LOW_PRIORITY"),
+                    ("general", dept_map.get("GENMED"), "NORMAL"),
+                    ("emergency", dept_map.get("EMERG"), "EMERGENCY_REVIEW"),
+                ]
+                for cat, dept_id, priority in default_rules:
+                    if dept_id:
+                        db.add(ClinicalRoutingRule(
+                            category_or_indicator=cat,
+                            department_id=dept_id,
+                            priority=priority,
+                            is_enabled=True,
+                            version="1.0"
+                        ))
+                db.commit()
+                print("Default clinical routing rules seeded.")
         finally:
             db.close()
 

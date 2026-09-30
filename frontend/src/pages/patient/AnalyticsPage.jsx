@@ -219,7 +219,7 @@ const AnalyticsPage = () => {
             <span>Clinical Intelligence Protocol</span>
           </div>
           <p className="text-[11px] text-slate-600">
-            All physiological trajectory markers and risk probabilities represent statistical decision-support pre-analyses. Verified clinical diagnoses are executed exclusively by licensed medical practitioners at Health Analyzer Hospital.
+            All physiological trajectory markers and risk probabilities represent statistical decision-support pre-analyses. Verified clinical diagnoses are executed exclusively by licensed medical practitioners at MediNexus Hospital.
           </p>
         </div>
       </div>

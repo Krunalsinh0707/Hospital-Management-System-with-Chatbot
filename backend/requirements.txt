@@ -1,13 +1,42 @@
+ # Web Framework & Server
+fastapi
+uvicorn
+python-multipart
+pydantic
+pydantic-settings
+python-dotenv
 
+# Database & ORM
+sqlalchemy
+alembic
+psycopg[binary]
+mysql-connector-python
+pymysql
+
+# Authentication & Security
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
+
+# AI, LLM & Vector Store
+google-generativeai
+google-genai
+chromadb
+
+# Machine Learning & Data Processing
 pandas
 numpy
 scikit-learn
+scipy
+joblib
 matplotlib
 seaborn
 flask
 joblib
 fastapi
 uvicorn
+
+# PDF & Document Processing
 pdfplumber
 python-multipart
 mysql-connector-python
@@ -22,3 +51,9 @@ Pillow
 reportlab
 google-generativeai
 chromadb
+
+# Testing & Graphify Codebase Utilities
+pytest
+anytechie-graphify
+requests
+httpx

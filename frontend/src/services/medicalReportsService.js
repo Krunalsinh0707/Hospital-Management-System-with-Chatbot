@@ -36,3 +36,11 @@ export const getPatientReports = async (patientId) => {
   return response.data;
 };
 
+export const submitReportForReview = async (reportId, doctorId = null, notes = '') => {
+  const response = await api.post(`/medical-reports/${reportId}/request-review`, {
+    doctor_id: doctorId,
+    notes
+  });
+  return response.data;
+};
+

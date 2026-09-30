@@ -1,23 +1,53 @@
+# =========================
 # Python
+# =========================
 venv/
 backend/venv/
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
+# =========================
 # Environment variables
+# =========================
 .env
+.env.*
 
+# =========================
 # Node.js
+# =========================
 node_modules/
+dist/
+build/
 
+# =========================
 # VS Code
+# =========================
 .vscode/
 
+# =========================
 # Uploads
+# =========================
 uploads/
 backend/uploads/
 
+# =========================
 # OS files
+# =========================
 .DS_Store
 Thumbs.db
+
+# =========================
+# ChromaDB / Local databases
+# =========================
+*.sqlite3
+chroma_db/
+backend/chroma_db/
+
+# =========================
+# Graphify generated output
+# =========================
+graphify-out/
+graphify-out/cache/

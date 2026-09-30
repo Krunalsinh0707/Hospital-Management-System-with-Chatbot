@@ -115,24 +115,68 @@ def get_doctor_appointments(db: Session = Depends(get_db), current_user=Depends(
         })
     return result
 
+@router.get("/doctor/{doctor_id}/availability")
+def get_appointment_availability(
+    doctor_id: int,
+    date_str: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    from datetime import date as dt_date, datetime as dt_datetime, timedelta
+    from src.clinical_chat.clinical_actions import check_appointment_availability
+
+    target_date = dt_date.today() + timedelta(days=1)
+    if date_str:
+        try:
+            target_date = dt_datetime.strptime(date_str, "%Y-%m-%d").date()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid date format. Expected YYYY-MM-DD.")
+
+    return check_appointment_availability(db, doctor_id, target_date)
+
+
 @router.put("/{appointment_id}/status")
 def update_appointment_status(appointment_id: int, update: AppointmentStatusUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     app = db.query(Appointment).filter(Appointment.id == appointment_id).first()
     if not app:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
+    user_role = (current_user.role or "").lower()
+    if user_role in ['patient', 'user']:
+        if app.patient_id != current_user.user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to update this appointment")
+        if update.status != "CANCELLED":
+            raise HTTPException(status_code=400, detail="Patients may only cancel appointments")
+    elif user_role in ['doctor', 'emergency_doctor']:
+        doc = db.query(Doctor).filter(Doctor.user_id == current_user.user_id).first()
+        if not doc or app.doctor_id != doc.id:
+            raise HTTPException(status_code=403, detail="Doctor not assigned to this appointment")
+    elif user_role not in ['admin', 'hospital_admin']:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
     app.status = update.status
     if update.notes:
         app.notes = update.notes
 
-    # Notify patient
-    notif = Notification(
-        user_id=app.patient_id,
-        title=f"Appointment {update.status.title()}",
-        message=f"Your appointment status has been updated to {update.status}.",
-        type="APPOINTMENT"
-    )
-    db.add(notif)
+    # Notify doctor if patient cancelled, or patient if doctor updated
+    if user_role in ['patient', 'user']:
+        doc = db.query(Doctor).filter(Doctor.id == app.doctor_id).first()
+        if doc and doc.user_id:
+            notif = Notification(
+                user_id=doc.user_id,
+                title="Appointment Cancelled by Patient",
+                message=f"Appointment #{app.id} on {app.appointment_date.strftime('%Y-%m-%d')} has been cancelled by the patient.",
+                type="APPOINTMENT"
+            )
+            db.add(notif)
+    else:
+        notif = Notification(
+            user_id=app.patient_id,
+            title=f"Appointment {update.status.title()}",
+            message=f"Your appointment status has been updated to {update.status}.",
+            type="APPOINTMENT"
+        )
+        db.add(notif)
 
     db.commit()
     return {"message": f"Appointment status updated to {update.status}"}

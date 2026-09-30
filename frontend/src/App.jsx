@@ -1,6 +1,6 @@
 import React, { useState, createContext, useContext, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationContainer from "./components/Notifications/NotificationContainer";
@@ -44,6 +44,8 @@ const OwnReportFlow = lazy(() => import('./pages/patient/OwnReportFlow'));
 const DoctorsPage = lazy(() => import('./pages/patient/DoctorsPage'));
 const AnalyticsPage = lazy(() => import('./pages/patient/AnalyticsPage'));
 const SettingsPage = lazy(() => import('./pages/patient/SettingsPage'));
+const PatientChatPage = lazy(() => import('./pages/patient/PatientChatPage'));
+const ClinicalChatConsole = lazy(() => import('./pages/doctor/ClinicalChatConsole'));
 
 const LayoutContext = createContext();
 export const useLayout = () => useContext(LayoutContext);
@@ -105,8 +107,14 @@ const CommonProtectedRoute = ({ children }) => {
 };
 
 const DashboardLayout = ({ children }) => {
+  const { user } = useAuth();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  const role = (user?.role || '').toLowerCase();
+  const isPatient = !role || role === 'patient' || role === 'user';
+  const isDedicatedChatPage = location.pathname.startsWith('/patient/chat') || location.pathname.startsWith('/doctor/clinical-chat');
 
   return (
     <LayoutContext.Provider value={{ toggleSidebar }}>
@@ -136,8 +144,10 @@ const DashboardLayout = ({ children }) => {
               {children}
             </motion.div>
           </main>
-          <ChatbotDrawer />
         </div>
+
+        {/* Floating HealthBot Launcher (Patient Dashboard & Patient Pages) */}
+        {isPatient && !isDedicatedChatPage && <ChatbotDrawer />}
       </div>
     </LayoutContext.Provider>
   );
@@ -151,7 +161,7 @@ function App() {
         <ReportProvider>
           <Suspense fallback={
             <div className="min-h-screen flex items-center justify-center bg-[#F7FAFC]">
-              <AnimatedLoader size="lg" message="Loading Health Analyzer Platform..." />
+              <AnimatedLoader size="lg" message="Loading MediNexus Platform..." />
             </div>
           }>
             <Routes>
@@ -183,12 +193,15 @@ function App() {
               <Route path="/cbc" element={<PatientProtectedRoute><DashboardLayout><CBC /></DashboardLayout></PatientProtectedRoute>} />
               <Route path="/history" element={<PatientProtectedRoute><DashboardLayout><History /></DashboardLayout></PatientProtectedRoute>} />
               <Route path="/report-history" element={<PatientProtectedRoute><DashboardLayout><History /></DashboardLayout></PatientProtectedRoute>} />
+              <Route path="/patient/chat" element={<PatientProtectedRoute><DashboardLayout><PatientChatPage /></DashboardLayout></PatientProtectedRoute>} />
+              <Route path="/chat" element={<Navigate to="/patient/chat" replace />} />
 
               {/* Doctor Routes */}
               <Route path="/doctor/dashboard" element={<DoctorProtectedRoute><DashboardLayout><DoctorDashboard /></DashboardLayout></DoctorProtectedRoute>} />
               <Route path="/doctor/appointments" element={<DoctorProtectedRoute><DashboardLayout><DoctorAppointments /></DashboardLayout></DoctorProtectedRoute>} />
               <Route path="/doctor/patients/:patientId" element={<DoctorProtectedRoute><DashboardLayout><DoctorPatientView /></DashboardLayout></DoctorProtectedRoute>} />
               <Route path="/doctor/reports" element={<DoctorProtectedRoute><DashboardLayout><DoctorReports /></DashboardLayout></DoctorProtectedRoute>} />
+              <Route path="/doctor/clinical-chat" element={<DoctorProtectedRoute><DashboardLayout><ClinicalChatConsole /></DashboardLayout></DoctorProtectedRoute>} />
 
               {/* Shared Clinical & Account Services */}
               <Route path="/departments" element={<CommonProtectedRoute><DashboardLayout><DepartmentsPage /></DashboardLayout></CommonProtectedRoute>} />

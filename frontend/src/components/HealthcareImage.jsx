@@ -56,7 +56,7 @@ const HealthcareImage = ({
               <ShieldCheck size={20} />
             </div>
             <span className="text-xs font-bold uppercase tracking-wider text-teal-300 bg-teal-500/10 px-2.5 py-1 rounded-md">
-              Health Analyzer AI
+              MediNexus AI
             </span>
           </div>
           <div>

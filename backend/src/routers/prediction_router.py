@@ -133,7 +133,7 @@ async def upload_report(file: UploadFile = File(...), current_user=Depends(get_c
     
     # Auto-index extracted PDF document content into ChromaDB vector store for RAG
     try:
-        from src.chatbot.vector_store import vector_store
+        from src.clinical_chat.vector_store import vector_store
         text_summary = f"Uploaded PDF Report '{file.filename}': Extracted Vitals & Medical Parameters: {json.dumps(extracted)}"
         vector_store.add_document_chunks(
             user_id=current_user.user_id,

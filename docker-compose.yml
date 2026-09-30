@@ -2,16 +2,17 @@ version: '3.8'
 
 services:
   db:
-    image: mysql:8.0
+    image: postgres:15-alpine
     container_name: health_analyzer_db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: health_analyzer
+      POSTGRES_USER: health_analyzer_user
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: health_analyzer
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
 
   backend:
     build:
@@ -24,11 +25,12 @@ services:
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=1440
       - DB_HOST=db
-      - DB_USER=root
-      - DB_PASS=rootpassword
+      - DB_USER=health_analyzer_user
+      - DB_PASS=admin
       - DB_NAME=health_analyzer
-      - DB_PORT=3306
-      - CORS_ALLOW_ORIGINS=http://localhost,http://localhost:5173
+      - DB_PORT=5432
+      - DATABASE_URL=postgresql+psycopg://health_analyzer_user:admin@db:5432/health_analyzer
+      - CORS_ALLOW_ORIGINS=http://localhost,http://localhost:5173,http://localhost:5174
     ports:
       - "8000:8000"
     depends_on:
@@ -46,4 +48,4 @@ services:
       - backend
 
 volumes:
-  mysql_data:
+  postgres_data:

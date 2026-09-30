@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { User, Bot, Copy, Check } from 'lucide-react';
 
-const ChatMessage = ({ msg }) => {
+const ChatMessage = ({ msg, onSelectOption }) => {
   const [copied, setCopied] = useState(false);
   const isUser = msg.sender === 'user';
 
@@ -14,6 +14,7 @@ const ChatMessage = ({ msg }) => {
   };
 
   const textContent = msg.text || msg.message || '';
+  const options = msg.clarification_options || [];
 
   return (
     <div className={`flex items-start gap-2.5 ${isUser ? 'flex-row-reverse' : ''}`}>
@@ -28,6 +29,21 @@ const ChatMessage = ({ msg }) => {
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {textContent}
             </ReactMarkdown>
+          </div>
+        )}
+
+        {/* Interactive Option Buttons if available */}
+        {!isUser && options && options.length > 0 && onSelectOption && (
+          <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+            {options.map((opt, i) => (
+              <button
+                key={i}
+                onClick={() => onSelectOption(`${i + 1}`)}
+                className="text-left px-2.5 py-1.5 rounded-lg bg-teal-50/80 hover:bg-teal-100 border border-teal-200 text-teal-900 text-[11px] font-semibold transition-all hover:scale-[1.01]"
+              >
+                {opt}
+              </button>
+            ))}
           </div>
         )}
 

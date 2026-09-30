@@ -66,7 +66,7 @@ const Login = () => {
               <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 flex items-center justify-center text-white">
                 <ShieldCheck size={28} />
               </div>
-              <span className="text-xl font-black text-white uppercase tracking-tighter">Health Analyzer</span>
+              <span className="text-xl font-black text-white uppercase tracking-tighter">MediNexus</span>
             </div>
 
             <h2 className="text-5xl font-black text-white leading-tight mb-6">
@@ -134,7 +134,7 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-teal-500/5 focus:border-[#0F9D8A] transition-all"
-                    placeholder="doctor@healthanalyzer.ai"
+                    placeholder="doctor@medinexus.org"
                   />
                 </div>
               </div>
