@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Upload, Edit3, ShieldCheck, ArrowLeft, Cpu, CheckCircle2, AlertCircle, FileSpreadsheet, Sparkles, Heart, Activity } from 'lucide-react';
+import { FileText, Upload, ArrowLeft, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import DepartmentSelectDrawer from '../../components/DepartmentSelectDrawer';
-import DynamicMedicalForm from '../../components/DynamicMedicalForm';
 import ReportProcessingUI from '../../components/ReportProcessingUI';
-import AIPreAnalysisResult from '../../components/AIPreAnalysisResult';
 import { uploadReportFile } from '../../services/medicalReportsService';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -13,7 +11,7 @@ const OwnReportFlow = () => {
   const location = useLocation();
 
   // Workflow states:
-  // 'SELECT_DEPT' -> 'CHOOSE_INPUT_METHOD' -> 'UPLOAD_UI' or 'MANUAL_FORM' -> 'PROCESSING' -> 'RESULT'
+  // 'SELECT_DEPT' -> 'UPLOAD_UI' -> 'PROCESSING' -> 'RESULT'
   const [step, setStep] = useState('SELECT_DEPT');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedDept, setSelectedDept] = useState(null);
@@ -22,8 +20,7 @@ const OwnReportFlow = () => {
   const [file, setFile] = useState(null);
   const [processingStep, setProcessingStep] = useState(1);
 
-  // Extraction & Analysis Result state
-  const [aiResult, setAiResult] = useState(null);
+  // Extraction Result state
   const [extractedParams, setExtractedParams] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -34,14 +31,7 @@ const OwnReportFlow = () => {
       const deptName = location.state.departmentName || (slug.charAt(0).toUpperCase() + slug.slice(1));
       setSelectedDept({ slug, name: deptName });
       setIsDrawerOpen(false);
-
-      if (location.state?.mode === 'UPLOAD') {
-        setStep('UPLOAD_UI');
-      } else if (location.state?.mode === 'MANUAL') {
-        setStep('MANUAL_FORM');
-      } else {
-        setStep('CHOOSE_INPUT_METHOD');
-      }
+      setStep('UPLOAD_UI');
     } else {
       setIsDrawerOpen(true);
     }
@@ -49,7 +39,7 @@ const OwnReportFlow = () => {
 
   const handleDepartmentSelected = (dept) => {
     setSelectedDept(dept);
-    setStep('CHOOSE_INPUT_METHOD');
+    setStep('UPLOAD_UI');
   };
 
   const handleFileUpload = async (e) => {
@@ -70,21 +60,14 @@ const OwnReportFlow = () => {
 
       setTimeout(() => {
         setProcessingStep(6);
-        setAiResult(response.ai_pre_analysis);
-        setExtractedParams(response.extracted_parameters);
+        setExtractedParams(response.extracted_parameters || {});
         setStep('RESULT');
       }, 3800);
     } catch (err) {
       console.error("Upload error:", err);
       setErrorMessage("Failed to process report file. Please verify the document format.");
-      setStep('CHOOSE_INPUT_METHOD');
+      setStep('UPLOAD_UI');
     }
-  };
-
-  const handleManualFormSubmit = ({ parameters, aiResult: result }) => {
-    setExtractedParams(parameters);
-    setAiResult(result);
-    setStep('RESULT');
   };
 
   return (
@@ -93,7 +76,7 @@ const OwnReportFlow = () => {
       <div className="flex items-center justify-between">
         <button
           onClick={() => {
-            if (step === 'RESULT' || step === 'CHOOSE_INPUT_METHOD' || step === 'MANUAL_FORM' || step === 'UPLOAD_UI') {
+            if (step === 'RESULT' || step === 'UPLOAD_UI') {
               setStep('SELECT_DEPT');
               setIsDrawerOpen(true);
             } else {
@@ -133,7 +116,7 @@ const OwnReportFlow = () => {
             I HAVE MY OWN REPORT
           </h1>
           <p className="text-slate-300 text-xs max-w-xl leading-relaxed">
-            Upload an existing diagnostic report from another hospital/lab or manually input clinical parameters for automated AI pre-analysis.
+            Upload an existing diagnostic report from another hospital/lab for automated OCR extraction and routing to your doctor's clinical review queue.
           </p>
         </div>
       </div>
@@ -145,81 +128,7 @@ const OwnReportFlow = () => {
         </div>
       )}
 
-      {/* STEP 2: CHOOSE INPUT METHOD */}
-      {step === 'CHOOSE_INPUT_METHOD' && selectedDept && (
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          <div className="text-center space-y-1">
-            <h2 className="text-xl font-extrabold text-slate-900 uppercase tracking-tight">
-              HOW WOULD YOU LIKE TO PROVIDE YOUR REPORT?
-            </h2>
-            <p className="text-xs text-slate-500">
-              Selected Department: <strong className="text-[#0F9D8A]">{selectedDept.name}</strong>
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-            {/* CHOICE 1: UPLOAD REPORT */}
-            <div
-              onClick={() => setStep('UPLOAD_UI')}
-              className="bg-white rounded-3xl p-8 border-2 border-slate-200 hover:border-[#0F9D8A] shadow-sm hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between space-y-6 group"
-            >
-              <div className="space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-teal-50 text-[#0F9D8A] flex items-center justify-center font-bold shadow-inner group-hover:scale-105 transition-transform">
-                  <Upload size={32} />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[#0F9D8A] bg-teal-50 px-2.5 py-0.5 rounded">
-                    AUTOMATED OCR
-                  </span>
-                  <h3 className="text-xl font-extrabold text-slate-900 mt-2 group-hover:text-[#0F9D8A] transition-colors">
-                    UPLOAD REPORT
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed mt-2">
-                    Upload a PDF or image scan. MediNexus OCR will extract parameters automatically without manual typing.
-                  </p>
-                </div>
-              </div>
-
-              <button className="w-full py-4 bg-[#0F9D8A] hover:bg-teal-700 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-teal-600/20">
-                [ UPLOAD REPORT FILE ]
-              </button>
-            </div>
-
-            {/* CHOICE 2: ENTER MANUALLY */}
-            <div
-              onClick={() => setStep('MANUAL_FORM')}
-              className="bg-white rounded-3xl p-8 border-2 border-slate-200 hover:border-indigo-600 shadow-sm hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between space-y-6 group"
-            >
-              <div className="space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-inner group-hover:scale-105 transition-transform">
-                  <Edit3 size={32} />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded">
-                    DYNAMIC PARAMETERS
-                  </span>
-                  <h3 className="text-xl font-extrabold text-slate-900 mt-2 group-hover:text-indigo-600 transition-colors">
-                    ENTER MANUALLY
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed mt-2">
-                    Manually provide specific medical parameters for {selectedDept.name}. Only relevant diagnostic fields will be prompted.
-                  </p>
-                </div>
-              </div>
-
-              <button className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md">
-                [ ENTER DATA MANUALLY ]
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* STEP 3A: UPLOAD REPORT UI */}
+      {/* STEP 2: UPLOAD REPORT UI */}
       {step === 'UPLOAD_UI' && (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
@@ -231,7 +140,7 @@ const OwnReportFlow = () => {
               UPLOAD MEDICAL REPORT FILE
             </h2>
             <p className="text-xs text-slate-500">
-              Supported formats: PDF, JPG, JPEG, PNG (Max 10MB)
+              Department: <strong className="text-[#0F9D8A]">{selectedDept?.name || 'General Medicine'}</strong> &bull; Formats: PDF, JPG, PNG (Max 10MB)
             </p>
           </div>
 
@@ -270,46 +179,85 @@ const OwnReportFlow = () => {
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => setStep('CHOOSE_INPUT_METHOD')}
+                onClick={() => {
+                  setStep('SELECT_DEPT');
+                  setIsDrawerOpen(true);
+                }}
                 className="px-5 py-3 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl"
               >
-                Back
+                Change Department
               </button>
               <button
                 type="submit"
                 disabled={!file}
                 className="px-6 py-3.5 bg-[#0F9D8A] hover:bg-teal-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg disabled:opacity-50"
               >
-                [ ANALYZE REPORT NOW ]
+                [ UPLOAD & EXTRACT PARAMETERS ]
               </button>
             </div>
           </form>
         </motion.div>
       )}
 
-      {/* STEP 3B: MANUAL PARAMETERS DYNAMIC FORM */}
-      {step === 'MANUAL_FORM' && selectedDept && (
-        <DynamicMedicalForm
-          modelSlug={selectedDept.slug === 'cardiology' ? 'heart' : selectedDept.slug === 'endocrinology' ? 'diabetes' : selectedDept.slug === 'hematology' ? 'cbc' : selectedDept.slug}
-          departmentName={selectedDept.name}
-          onSubmitSuccess={handleManualFormSubmit}
-          onCancel={() => setStep('CHOOSE_INPUT_METHOD')}
-        />
-      )}
-
-      {/* STEP 4: PROCESSING STATUS */}
+      {/* STEP 3: PROCESSING STATUS */}
       {step === 'PROCESSING' && (
         <ReportProcessingUI currentStep={processingStep} fileInfo={file} />
       )}
 
-      {/* STEP 5: FINAL RESULT */}
-      {step === 'RESULT' && aiResult && (
-        <AIPreAnalysisResult
-          analysis={aiResult}
-          extractedParameters={extractedParams}
-          departmentName={selectedDept?.name}
-          onDone={() => navigate('/my-reports')}
-        />
+      {/* STEP 4: FINAL RESULT */}
+      {step === 'RESULT' && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm space-y-6 max-w-2xl mx-auto"
+        >
+          <div className="text-center space-y-2">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+              REPORT EXTRACTED & SUBMITTED
+            </h2>
+            <p className="text-xs text-slate-500 font-medium">
+              Your diagnostic report has been validated and queued for physician review in <span className="font-bold text-slate-700">{selectedDept?.name || 'General Medicine'}</span>.
+            </p>
+          </div>
+
+          {extractedParams && Object.keys(extractedParams).length > 0 && (
+            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-3">
+              <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+                Extracted Clinical Parameters
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {Object.entries(extractedParams).map(([k, v]) => (
+                  <div key={k} className="bg-white p-3 rounded-xl border border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-400 block truncate">{k}</span>
+                    <span className="text-sm font-extrabold text-slate-800">{String(v)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <button
+              onClick={() => navigate('/my-reports')}
+              className="px-6 py-3.5 bg-[#0F9D8A] hover:bg-teal-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all"
+            >
+              View My Reports
+            </button>
+            <button
+              onClick={() => {
+                setFile(null);
+                setExtractedParams(null);
+                setStep('UPLOAD_UI');
+              }}
+              className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-all"
+            >
+              Upload Another
+            </button>
+          </div>
+        </motion.div>
       )}
     </div>
   );

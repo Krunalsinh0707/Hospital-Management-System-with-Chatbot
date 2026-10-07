@@ -8,7 +8,7 @@ const ReportProcessingUI = ({ currentStep, fileInfo }) => {
     { id: 2, label: 'OCR processing & parameter extraction', desc: 'Parsing digital medical parameters' },
     { id: 3, label: 'Validating information', desc: 'Checking unit reference ranges' },
     { id: 4, label: 'Detecting department', desc: 'Auto-matching clinical specialty' },
-    { id: 5, label: 'Running AI pre-analysis', desc: 'Model inference & decision support' },
+    { id: 5, label: 'Routing to department queue', desc: 'Matching clinical specialty & doctors' },
     { id: 6, label: 'Preparing doctor review queue', desc: 'Finalizing digital medical record' }
   ];
 
@@ -23,10 +23,10 @@ const ReportProcessingUI = ({ currentStep, fileInfo }) => {
           <Cpu className="w-8 h-8 animate-pulse" />
         </div>
         <h3 className="text-lg font-extrabold text-slate-900 uppercase tracking-tight">
-          REPORT PROCESSING & AI PIPELINE
+          REPORT PROCESSING & EXTRACTION PIPELINE
         </h3>
         <p className="text-xs text-slate-500 max-w-sm mx-auto">
-          MediNexus is executing OCR extraction and routing data to the model registry.
+          MediNexus is executing OCR extraction and routing data for doctor clinical review.
         </p>
       </div>
 

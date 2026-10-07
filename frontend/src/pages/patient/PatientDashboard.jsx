@@ -15,7 +15,6 @@ import HealthTrendChart from '../../components/PatientDashboard/HealthTrendChart
 import UpcomingAppointments from '../../components/PatientDashboard/UpcomingAppointments';
 import CareTeam from '../../components/PatientDashboard/CareTeam';
 import HospitalDepartments from '../../components/PatientDashboard/HospitalDepartments';
-import AIHealthInsights from '../../components/PatientDashboard/AIHealthInsights';
 import MedicalReports from '../../components/PatientDashboard/MedicalReports';
 import RecentActivity from '../../components/PatientDashboard/RecentActivity';
 import EmergencyAssistance from '../../components/PatientDashboard/EmergencyAssistance';
@@ -199,7 +198,7 @@ const PatientDashboard = () => {
         title: gVal <= 50 ? 'Your glucose is critically low' : 'Your glucose is low',
         actionPill: 'ACT NOW',
         description: `A fasting glucose result of ${gVal} mg/dL needs prompt attention. If you feel confused, faint, or unable to swallow, request emergency help now.`,
-        actionLink: '/diabetes'
+        actionLink: gVal <= 50 ? '/emergency' : '/appointments'
       };
     }
     if (!isNaN(gVal) && gVal >= 126) {
@@ -207,8 +206,8 @@ const PatientDashboard = () => {
         hasAlert: true,
         title: 'Your blood glucose is elevated',
         actionPill: 'ATTENTION',
-        description: `Your fasting glucose reading of ${gVal} mg/dL indicates hyperglycemia. Review your risk analysis and contact your care team for clinical management.`,
-        actionLink: '/diabetes'
+        description: `Your fasting glucose reading of ${gVal} mg/dL indicates hyperglycemia. Review your parameters and contact your care team for clinical management.`,
+        actionLink: '/appointments'
       };
     }
     if (healthMetrics.bp.badgeType === 'high') {
@@ -217,7 +216,7 @@ const PatientDashboard = () => {
         title: 'Your blood pressure is elevated',
         actionPill: 'ATTENTION',
         description: `Your blood pressure reading of ${healthMetrics.bp.value} mmHg is above standard reference limits. Clinical evaluation is recommended.`,
-        actionLink: '/hypertension'
+        actionLink: '/appointments'
       };
     }
     if (healthMetrics.bp.badgeType === 'low') {
@@ -226,7 +225,7 @@ const PatientDashboard = () => {
         title: 'Your blood pressure is low',
         actionPill: 'ATTENTION',
         description: `Your blood pressure reading of ${healthMetrics.bp.value} mmHg is below the standard baseline. Stay hydrated and monitor for lightheadedness.`,
-        actionLink: '/hypertension'
+        actionLink: '/appointments'
       };
     }
     const highRiskRep = reports.find(r => r.ai_analysis?.risk_level === 'HIGH' || r.ai_analysis?.risk_level === 'CRITICAL');
@@ -236,7 +235,7 @@ const PatientDashboard = () => {
         title: `${highRiskRep.report_title} requires clinician review`,
         actionPill: 'ACT NOW',
         description: highRiskRep.ai_analysis?.explanation || 'Clinical parameter anomalies flagged during automated diagnostic review.',
-        actionLink: '/reports'
+        actionLink: '/my-reports'
       };
     }
     return {
@@ -443,13 +442,6 @@ const PatientDashboard = () => {
                 {/* SECTION 7: Health Trends */}
                 <HealthTrendChart 
                   historicalData={historicalData}
-                />
-
-                {/* SECTION 11: AI Health Insights */}
-                <AIHealthInsights 
-                  insights={insights}
-                  vitals={vitals}
-                  riskData={riskData}
                 />
 
                 {/* SECTION 12: Medical Reports */}

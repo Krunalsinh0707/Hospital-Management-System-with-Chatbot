@@ -1054,10 +1054,10 @@ const Landing = () => {
             </div>
 
             <button
-              onClick={() => navigate('/ai-models')}
+              onClick={() => navigate('/departments')}
               className="btn-pill-primary text-xs"
             >
-              <span>Explore Clinical AI Models</span>
+              <span>Explore Hospital Departments</span>
               <ArrowRight size={15} />
             </button>
           </div>

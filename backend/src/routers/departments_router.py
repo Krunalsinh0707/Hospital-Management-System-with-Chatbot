@@ -6,7 +6,6 @@ from typing import List, Optional, Dict, Any
 from src.database import get_db
 from src.models import Department, Doctor, User
 from src.auth import get_current_user, get_current_admin
-from src.ml.registry import model_registry
 
 router = APIRouter(prefix="/departments", tags=["Hospital Departments"])
 
@@ -351,21 +350,17 @@ def get_department_details(dept_identifier: str, db: Session = Depends(get_db)):
                 "availability": doc.availability or {"days": "Mon - Fri", "hours": "09:00 AM - 04:00 PM"}
             })
 
-    # Fetch registered AI models from model registry
-    registered_models = model_registry.get_registered_models()
-    ai_models = [m for m in registered_models if m.get("department", "").lower() == slug.lower() or slug.lower() in m.get("slug", "").lower()]
+    ai_models = []
 
-    # Standard analysis workflow
+    # Standard clinical report review workflow
     workflow_steps = [
         {"step": 1, "title": "Medical Report", "desc": "Patient uploads or enters medical report data."},
         {"step": 2, "title": "OCR / Extraction", "desc": "Health Analyzer extracts clinical parameters."},
         {"step": 3, "title": "Structured Data", "desc": "Extracted metrics formatted into standard schema."},
         {"step": 4, "title": "Validation", "desc": "Reference ranges & physiological validity verified."},
-        {"step": 5, "title": "Department Analysis", "desc": "Routed to selected medical specialty model."},
-        {"step": 6, "title": "Relevant AI Model", "desc": "Specialized ML model runs pre-analysis prediction."},
-        {"step": 7, "title": "AI Pre-Analysis", "desc": "Risk score & probability calculated with factor weights."},
-        {"step": 8, "title": "Doctor Review", "desc": "Consultant physician verifies & signs off."},
-        {"step": 9, "title": "Final Medical Record", "desc": "Saved to permanent patient digital health file."}
+        {"step": 5, "title": "Department Routing", "desc": "Routed to selected medical specialty department."},
+        {"step": 6, "title": "Doctor Review", "desc": "Consultant physician verifies & signs off."},
+        {"step": 7, "title": "Final Medical Record", "desc": "Saved to permanent patient digital health file."}
     ]
 
     return {

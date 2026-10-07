@@ -11,7 +11,7 @@ from src.database import get_db
 from src.models import MedicalReport, ReportExtraction, AIAnalysis, DoctorReview, Doctor, Department, User, Notification, ReportReviewRequest
 from src.auth import get_current_user
 from src.pdf_service import extract_parameters_from_pdf
-from src.ml.ai_analyzer import run_ai_pre_analysis
+from src.ml.department_detector import detect_department
 
 router = APIRouter(prefix="/medical-reports", tags=["Digital Medical Reports"])
 
@@ -146,39 +146,22 @@ async def upload_existing_report(
     db.add(extraction)
     new_report.status = "OCR_EXTRACTED"
 
-    # Run AI Pre-Analysis
-    ai_result = run_ai_pre_analysis(extracted_data, raw_text)
-    
-    # Find department ID by slug
-    dept = db.query(Department).filter(Department.code == ai_result["department_slug"].upper()[:6]).first()
+    # Route to relevant department using deterministic keyword detection
+    dept_slug = detect_department(extracted_data, raw_text)
+    dept = db.query(Department).filter(Department.code == dept_slug.upper()[:6]).first()
     if not dept:
-        dept = db.query(Department).filter(Department.name.ilike(f"%{ai_result['department_slug']}%")).first()
+        dept = db.query(Department).filter(Department.name.ilike(f"%{dept_slug}%")).first()
 
     if dept:
         new_report.department_id = dept.id
 
-    ai_analysis = AIAnalysis(
-        report_id=new_report.id,
-        department_slug=ai_result["department_slug"],
-        model_name=ai_result["model_name"],
-        model_version=ai_result["model_version"],
-        prediction=ai_result["prediction"],
-        probability=ai_result["probability"],
-        risk_level=ai_result["risk_level"],
-        important_factors=ai_result["important_factors"],
-        explanation=ai_result["explanation"],
-        requires_doctor_review=True
-    )
-    db.add(ai_analysis)
-    new_report.status = "AI_PRE_ANALYZED"
-
+    new_report.status = "READY_FOR_REVIEW"
     db.commit()
 
     return {
-        "message": "Report uploaded and AI pre-analyzed successfully",
+        "message": "Report uploaded and extracted successfully",
         "report_id": new_report.id,
-        "extracted_parameters": extracted_data,
-        "ai_pre_analysis": ai_result
+        "extracted_parameters": extracted_data
     }
 
 @router.post("/hospital")
@@ -202,29 +185,13 @@ def create_hospital_report(data: HospitalReportCreate, db: Session = Depends(get
     db.commit()
     db.refresh(new_report)
 
-    # Run AI Pre-analysis
-    ai_result = run_ai_pre_analysis(data.parameters, data.findings)
-    ai_analysis = AIAnalysis(
-        report_id=new_report.id,
-        department_slug=ai_result["department_slug"],
-        model_name=ai_result["model_name"],
-        model_version=ai_result["model_version"],
-        prediction=ai_result["prediction"],
-        probability=ai_result["probability"],
-        risk_level=ai_result["risk_level"],
-        important_factors=ai_result["important_factors"],
-        explanation=ai_result["explanation"],
-        requires_doctor_review=False
-    )
-    db.add(ai_analysis)
-
     # Doctor Review record
     review = DoctorReview(
         report_id=new_report.id,
         doctor_id=doc_id or 1,
         review_status="APPROVED",
         clinical_notes=data.findings,
-        final_assessment=f"Hospital Report Generated: {ai_result['prediction']}"
+        final_assessment=f"Hospital Report Generated: {data.report_title}"
     )
     db.add(review)
     new_report.status = "FINALIZED"
@@ -245,7 +212,7 @@ def create_hospital_report(data: HospitalReportCreate, db: Session = Depends(get
 def get_reports_pending_review(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     doctor = db.query(Doctor).filter(Doctor.user_id == current_user.user_id).first()
     
-    query = db.query(MedicalReport).filter(MedicalReport.status.in_(["AI_PRE_ANALYZED", "UPLOADED", "OCR_EXTRACTED"]))
+    query = db.query(MedicalReport).filter(MedicalReport.status.in_(["READY_FOR_REVIEW", "AI_PRE_ANALYZED", "UPLOADED", "OCR_EXTRACTED"]))
     if doctor and doctor.department_id:
         query = query.filter(MedicalReport.department_id == doctor.department_id)
 

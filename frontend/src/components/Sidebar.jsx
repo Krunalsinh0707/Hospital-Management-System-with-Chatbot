@@ -29,16 +29,9 @@ const Sidebar = ({ onClose }) => {
         items: [
           { path: '/doctor/clinical-chat', name: 'Clinical Chat Console', icon: <MessageSquare size={18} /> },
           { path: '/doctor/appointments', name: 'Consultations & Triage', icon: <Calendar size={18} /> },
-          { path: '/doctor/reports', name: 'AI Decision & Review', icon: <ShieldCheck size={18} /> },
+          { path: '/doctor/reports', name: 'Clinical Review Queue', icon: <ShieldCheck size={18} /> },
           { path: '/emergency', name: 'Emergency Queue', icon: <Activity size={18} /> },
           { path: '/departments', name: 'Hospital Departments', icon: <Building size={18} /> },
-        ]
-      },
-      {
-        title: 'AI INTELLIGENCE',
-        items: [
-          { path: '/ai-models', name: 'Model Registry', icon: <Layers size={18} /> },
-          { path: '/ml-studio', name: 'Neural Studio', icon: <Cpu size={18} /> },
         ]
       },
       {
@@ -64,13 +57,6 @@ const Sidebar = ({ onClose }) => {
           { path: '/departments', name: 'Departments', icon: <Database size={18} /> },
           { path: '/emergency', name: 'Emergency Queue', icon: <Activity size={18} /> },
           { path: '/my-reports', name: 'Medical Records', icon: <FileText size={18} /> },
-        ]
-      },
-      {
-        title: 'AI INTELLIGENCE',
-        items: [
-          { path: '/ai-models', name: 'AI Model Registry', icon: <Layers size={18} /> },
-          { path: '/ml-studio', name: 'Neural Studio', icon: <Cpu size={18} /> },
         ]
       },
       {

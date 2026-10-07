@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Activity, Heart, Zap, Droplets, ShieldCheck
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Activity, ShieldCheck } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
   Tooltip as RechartsTooltip, ResponsiveContainer, Legend 
@@ -144,73 +141,7 @@ const AnalyticsPage = () => {
           </div>
         </div>
 
-        {/* Specialized Disease Models Quick Access */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-tight">
-            Specialized Disease Pre-Analysis Models
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link
-              to="/diabetes"
-              className="bg-white p-4 rounded-xl border border-slate-200 hover:border-[#0F9D8A] shadow-xs transition-all group space-y-2"
-            >
-              <div className="w-8 h-8 rounded-lg bg-teal-50 text-[#0F9D8A] flex items-center justify-center">
-                <Activity size={18} />
-              </div>
-              <h3 className="text-xs font-bold text-slate-900 group-hover:text-[#0F9D8A] transition-colors">
-                Diabetes Risk Model
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                Pima diagnostic neural pipeline evaluating fasting insulin, glucose, and BMI indices.
-              </p>
-            </Link>
 
-            <Link
-              to="/heart"
-              className="bg-white p-4 rounded-xl border border-slate-200 hover:border-[#0F9D8A] shadow-xs transition-all group space-y-2"
-            >
-              <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
-                <Heart size={18} />
-              </div>
-              <h3 className="text-xs font-bold text-slate-900 group-hover:text-[#0F9D8A] transition-colors">
-                Cardiac Risk Model
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                Cardiovascular hemodynamic risk analysis covering resting arterial pressure and ECG indices.
-              </p>
-            </Link>
-
-            <Link
-              to="/hypertension"
-              className="bg-white p-4 rounded-xl border border-slate-200 hover:border-[#0F9D8A] shadow-xs transition-all group space-y-2"
-            >
-              <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                <Zap size={18} />
-              </div>
-              <h3 className="text-xs font-bold text-slate-900 group-hover:text-[#0F9D8A] transition-colors">
-                Hypertension Model
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                Stage 1 and Stage 2 hypertension classification based on arterial pressure intervals.
-              </p>
-            </Link>
-
-            <Link
-              to="/cbc"
-              className="bg-white p-4 rounded-xl border border-slate-200 hover:border-[#0F9D8A] shadow-xs transition-all group space-y-2"
-            >
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <Droplets size={18} />
-              </div>
-              <h3 className="text-xs font-bold text-slate-900 group-hover:text-[#0F9D8A] transition-colors">
-                Complete Blood Count (CBC)
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                Automated cell indices analysis covering Hemoglobin, RBC, WBC, Platelets, and MCV.
-              </p>
-            </Link>
-          </div>
-        </div>
 
         {/* Clinical Disclaimer Box */}
         <div className="p-4 bg-teal-50/50 border border-teal-100 rounded-xl text-xs text-slate-700 leading-relaxed space-y-1">

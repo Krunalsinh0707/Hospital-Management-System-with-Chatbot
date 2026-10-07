@@ -19,16 +19,8 @@ const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const VerifyOTP = lazy(() => import('./pages/VerifyOTP'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Diabetes = lazy(() => import('./pages/Diabetes'));
-const Heart = lazy(() => import('./pages/Heart'));
-const Hypertension = lazy(() => import('./pages/Hypertension'));
 const Profile = lazy(() => import('./pages/Profile'));
-const History = lazy(() => import('./pages/History'));
-const CBC = lazy(() => import('./pages/CBC'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
-const MLStudio = lazy(() => import('./pages/MLStudio'));
-
 
 const PatientDashboard = lazy(() => import('./pages/patient/PatientDashboard'));
 const MyReports = lazy(() => import('./pages/patient/MyReports'));
@@ -39,7 +31,6 @@ const DoctorReports = lazy(() => import('./pages/doctor/DoctorReports'));
 const DoctorAppointments = lazy(() => import('./pages/doctor/DoctorAppointments'));
 const DoctorPatientView = lazy(() => import('./pages/doctor/DoctorPatientView'));
 const DepartmentsPage = lazy(() => import('./pages/departments/DepartmentsPage'));
-const AIModelsPage = lazy(() => import('./pages/patient/AIModelsPage'));
 const OwnReportFlow = lazy(() => import('./pages/patient/OwnReportFlow'));
 const DoctorsPage = lazy(() => import('./pages/patient/DoctorsPage'));
 const AnalyticsPage = lazy(() => import('./pages/patient/AnalyticsPage'));
@@ -187,12 +178,8 @@ function App() {
               <Route path="/appointments" element={<PatientProtectedRoute><DashboardLayout><Appointments /></DashboardLayout></PatientProtectedRoute>} />
               <Route path="/doctors" element={<PatientProtectedRoute><DashboardLayout><DoctorsPage /></DashboardLayout></PatientProtectedRoute>} />
               <Route path="/analytics" element={<PatientProtectedRoute><DashboardLayout><AnalyticsPage /></DashboardLayout></PatientProtectedRoute>} />
-              <Route path="/diabetes" element={<PatientProtectedRoute><DashboardLayout><Diabetes /></DashboardLayout></PatientProtectedRoute>} />
-              <Route path="/heart" element={<PatientProtectedRoute><DashboardLayout><Heart /></DashboardLayout></PatientProtectedRoute>} />
-              <Route path="/hypertension" element={<PatientProtectedRoute><DashboardLayout><Hypertension /></DashboardLayout></PatientProtectedRoute>} />
-              <Route path="/cbc" element={<PatientProtectedRoute><DashboardLayout><CBC /></DashboardLayout></PatientProtectedRoute>} />
-              <Route path="/history" element={<PatientProtectedRoute><DashboardLayout><History /></DashboardLayout></PatientProtectedRoute>} />
-              <Route path="/report-history" element={<PatientProtectedRoute><DashboardLayout><History /></DashboardLayout></PatientProtectedRoute>} />
+              <Route path="/history" element={<Navigate to="/my-reports" replace />} />
+              <Route path="/report-history" element={<Navigate to="/my-reports" replace />} />
               <Route path="/patient/chat" element={<PatientProtectedRoute><DashboardLayout><PatientChatPage /></DashboardLayout></PatientProtectedRoute>} />
               <Route path="/chat" element={<Navigate to="/patient/chat" replace />} />
 
@@ -207,8 +194,6 @@ function App() {
               <Route path="/departments" element={<CommonProtectedRoute><DashboardLayout><DepartmentsPage /></DashboardLayout></CommonProtectedRoute>} />
               <Route path="/departments/:deptSlug" element={<CommonProtectedRoute><DashboardLayout><DepartmentsPage /></DashboardLayout></CommonProtectedRoute>} />
               <Route path="/emergency" element={<CommonProtectedRoute><DashboardLayout><EmergencyPage /></DashboardLayout></CommonProtectedRoute>} />
-              <Route path="/ai-models" element={<CommonProtectedRoute><DashboardLayout><AIModelsPage /></DashboardLayout></CommonProtectedRoute>} />
-              <Route path="/ml-studio" element={<CommonProtectedRoute><DashboardLayout><MLStudio /></DashboardLayout></CommonProtectedRoute>} />
               <Route path="/profile" element={<CommonProtectedRoute><DashboardLayout><Profile /></DashboardLayout></CommonProtectedRoute>} />
               <Route path="/settings" element={<CommonProtectedRoute><DashboardLayout><SettingsPage /></DashboardLayout></CommonProtectedRoute>} />
 

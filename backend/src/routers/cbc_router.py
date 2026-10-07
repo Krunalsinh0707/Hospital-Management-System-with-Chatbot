@@ -9,7 +9,6 @@ from src.database import get_db_connection
 from src.auth import get_current_user
 from src.pdf_service import extract_cbc_from_file
 from src.cbc_analysis import interpret_cbc, process_manual_cbc
-from src.clinical_advice import generate_clinical_advice
 
 router = APIRouter(tags=["CBC Analysis"])
 
@@ -65,10 +64,6 @@ async def analyze_manual_cbc(data: ManualCbcInput, current_user=Depends(get_curr
     input_data = {k: v for k, v in data.dict().items() if v is not None}
     cbc_data = process_manual_cbc(input_data)
     interpretation = interpret_cbc(cbc_data)
-    
-    prob = interpretation.get("ml_model_insights", {}).get("probability", 0)
-    clinical_advice = generate_clinical_advice("Hematological Pattern", prob, input_data)
-    interpretation["clinical_advice"] = clinical_advice
 
     return {"cbc": cbc_data, "interpretation": interpretation}
 

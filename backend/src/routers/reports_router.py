@@ -5,7 +5,6 @@ import json
 
 from src.database import get_db_connection
 from src.auth import get_current_user
-from src.routers.prediction_router import HeartData, HypertensionData
 from src.pdf_generator import generate_pdf_report
 
 router = APIRouter(tags=["Patient Reports & History"])
@@ -15,12 +14,32 @@ class ReportSave(BaseModel):
     outputs: dict
     source: str = "manual"
 
-class HeartReportSave(HeartData):
-    prediction: str
+class HeartReportSave(BaseModel):
+    age: Optional[int] = None
+    sex: Optional[int] = None
+    cp: Optional[int] = None
+    trestbps: Optional[float] = None
+    chol: Optional[float] = None
+    fbs: Optional[int] = None
+    restecg: Optional[int] = None
+    thalach: Optional[float] = None
+    exang: Optional[int] = None
+    oldpeak: Optional[float] = None
+    slope: Optional[int] = None
+    ca: Optional[int] = None
+    thal: Optional[int] = None
+    prediction: Optional[str] = None
     probability: Optional[float] = None
 
-class HypertensionReportSave(HypertensionData):
-    prediction: str
+class HypertensionReportSave(BaseModel):
+    age: Optional[int] = None
+    sex: Optional[int] = None
+    bmi: Optional[float] = None
+    heart_rate: Optional[float] = None
+    activity_level: Optional[int] = None
+    smoker: Optional[int] = None
+    family_history: Optional[int] = None
+    prediction: Optional[str] = None
     probability: Optional[float] = None
 
 @router.post("/reports/save")

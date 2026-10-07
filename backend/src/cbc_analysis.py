@@ -231,29 +231,6 @@ def interpret_cbc(cbc_data: Dict[str, Dict[str, object]], gender: str = "male") 
     if wbc_val is not None and wbc_val >= 30000:
         conditions.append("Severe Leukocytosis (Requires Urgent Hematology Evaluation)")
 
-    # Run ML Model Classifier
-    from src.ml_service import predict_cbc_condition
-    ml_input = {
-        'Hemoglobin': _value("Hemoglobin") or 14.0,
-        'RBC': _value("RBC") or 4.8,
-        'WBC': wbc_val or 7000,
-        'Platelets': _value("Platelets") or 250000,
-        'MCV': _value("MCV") or 90,
-        'MCH': _value("MCH") or 30,
-        'RDW': _value("RDW") or 13,
-        'Neutrophils': _value("Neutrophils") or 55,
-        'Lymphocytes': _value("Lymphocytes") or 30,
-        'Monocytes': _value("Monocytes") or 5,
-        'Eosinophils': _value("Eosinophils") or 3,
-        'Basophils': _value("Basophils") or 0.5
-    }
-    
-    ml_output = predict_cbc_condition(ml_input)
-    ml_prediction = ml_output.get("prediction", "Normal")
-    
-    if ml_prediction and ml_prediction not in {"Normal", "Unknown"}:
-        conditions.append(f"AI ML Model Finding: {ml_prediction}")
-
     health_score = calculate_cbc_health_score(cbc_data)
 
     # Patient-Friendly Explanation
@@ -276,8 +253,7 @@ def interpret_cbc(cbc_data: Dict[str, Dict[str, object]], gender: str = "male") 
         doctor_explanation += f"CRITICAL VALUES: {'; '.join(critical_flags)}. "
     if flags:
         doctor_explanation += f"ABNORMAL PARAMS: {'; '.join(flags)}. "
-    doctor_explanation += f"DIAGNOSTIC PATTERNS: {'; '.join(set(conditions)) if conditions else 'Unremarkable'}. "
-    doctor_explanation += f"ML CLASSIFIER PATTERN: {ml_prediction} (Confidence: {round(ml_output.get('probability', 0)*100, 1)}%)."
+    doctor_explanation += f"DIAGNOSTIC PATTERNS: {'; '.join(set(conditions)) if conditions else 'Unremarkable'}."
 
     # Urgency Stratification
     if critical_flags or (wbc_val and wbc_val > 30000):
@@ -298,8 +274,8 @@ def interpret_cbc(cbc_data: Dict[str, Dict[str, object]], gender: str = "male") 
         "summary": doctor_explanation,
         "patient_explanation": patient_explanation,
         "doctor_explanation": doctor_explanation,
-        "ml_prediction": ml_prediction,
-        "ml_model_insights": ml_output,
+        "ml_prediction": None,
+        "ml_model_insights": {},
         "recommendations": {
             "lifestyle": ["Maintain hydration", "Balanced diet rich in leafy greens and lean protein", "Adequate rest"],
             "medical": ["Repeat CBC in 3-4 weeks to observe trend", "Consult Primary Care Physician or Hematologist"],

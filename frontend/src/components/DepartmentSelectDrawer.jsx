@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Heart, Activity, Droplets, Wind, Dna, Brain, Bone, Stethoscope, Shield, User, UserCheck, Hospital, AlertOctagon, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { getDepartmentsWithModels } from '../services/modelRegistryService';
+import { getDepartments } from '../services/hospitalService';
 
 const iconMap = {
   Heart: <Heart className="w-5 h-5 text-rose-500" />,
@@ -33,19 +33,25 @@ const DepartmentSelectDrawer = ({ isOpen, onClose, onSelectDepartment }) => {
   const fetchDepartments = async () => {
     setLoading(true);
     try {
-      const data = await getDepartmentsWithModels();
-      setDepartments(data || []);
+      const data = await getDepartments();
+      const mapped = (data || []).map(d => ({
+        ...d,
+        slug: d.slug || (d.name ? d.name.toLowerCase().replace(/\s+/g, '-') : 'general'),
+        icon: d.icon || 'Hospital',
+        status: d.status || 'Available'
+      }));
+      setDepartments(mapped);
     } catch (err) {
       console.error("Failed to load departments:", err);
       // Fallback departments if backend offline
       setDepartments([
-        { slug: 'cardiology', name: 'Cardiology', icon: 'Heart', description: 'Heart disease & cardiac risk', status: 'Available' },
+        { slug: 'cardiology', name: 'Cardiology', icon: 'Heart', description: 'Heart disease & cardiac care', status: 'Available' },
         { slug: 'endocrinology', name: 'Endocrinology', icon: 'Activity', description: 'Diabetes & metabolic health', status: 'Available' },
         { slug: 'hematology', name: 'Hematology', icon: 'Droplets', description: 'CBC & blood disorders', status: 'Available' },
-        { slug: 'pulmonology', name: 'Pulmonology', icon: 'Wind', description: 'Lungs & respiratory care', status: 'Coming Soon' },
-        { slug: 'oncology', name: 'Oncology', icon: 'Dna', description: 'Cancer risk & tumor markers', status: 'Coming Soon' },
-        { slug: 'neurology', name: 'Neurology', icon: 'Brain', description: 'Neurological & brain health', status: 'Coming Soon' },
-        { slug: 'orthopedics', name: 'Orthopedics', icon: 'Bone', description: 'Bones, joints & spine', status: 'Doctor Review Required' },
+        { slug: 'pulmonology', name: 'Pulmonology', icon: 'Wind', description: 'Lungs & respiratory care', status: 'Available' },
+        { slug: 'oncology', name: 'Oncology', icon: 'Dna', description: 'Cancer care & tumor markers', status: 'Available' },
+        { slug: 'neurology', name: 'Neurology', icon: 'Brain', description: 'Neurological & brain health', status: 'Available' },
+        { slug: 'orthopedics', name: 'Orthopedics', icon: 'Bone', description: 'Bones, joints & spine', status: 'Available' },
         { slug: 'general', name: 'General Medicine', icon: 'Hospital', description: 'General vitals assessment', status: 'Available' }
       ]);
     } finally {

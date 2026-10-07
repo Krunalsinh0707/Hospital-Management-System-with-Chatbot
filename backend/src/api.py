@@ -19,7 +19,6 @@ from src.models import User as DBUser, Base, PasswordResetOTP
 # Router Imports
 from src.routers import (
     auth_router,
-    prediction_router,
     reports_router,
     cbc_router,
     admin_router,
@@ -33,7 +32,6 @@ from src.routers import (
     communication_router,
     analytics_router,
     notifications_router,
-    model_registry_router,
     clinical_chat_router
 )
 
@@ -104,7 +102,6 @@ app.add_middleware(
 
 # ---------------- INCLUDE API ROUTERS ----------------
 app.include_router(auth_router.router)
-app.include_router(prediction_router.router)
 app.include_router(reports_router.router)
 app.include_router(cbc_router.router)
 app.include_router(admin_router.router)
@@ -118,7 +115,6 @@ app.include_router(emergency_router.router)
 app.include_router(communication_router.router)
 app.include_router(analytics_router.router)
 app.include_router(notifications_router.router)
-app.include_router(model_registry_router.router)
 app.include_router(clinical_chat_router.router)
 
 from sqlalchemy import text
