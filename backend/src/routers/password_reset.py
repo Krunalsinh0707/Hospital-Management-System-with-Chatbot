@@ -14,6 +14,7 @@ from src.schemas.password_reset import (
 from src.services.otp_service import otp_service
 from src.services.email_service import email_service
 from src.auth import get_password_hash
+from src.security.rate_limiter import rate_limit
 
 logger = logging.getLogger("health_analyzer.password_reset_router")
 
@@ -41,7 +42,12 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
     return True, "Password meets strength criteria."
 
 @router.post("/forgot-password", response_model=PasswordResetResponse)
-async def forgot_password(req: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
+async def forgot_password(
+    req: ForgotPasswordRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    _limiter: None = Depends(rate_limit(max_requests=5, window_seconds=600, prefix="forgot_pw"))
+):
     """
     Initiate Forgot Password flow. Checks user existence, generates OTP, and dispatches email.
     """
@@ -66,10 +72,7 @@ async def forgot_password(req: ForgotPasswordRequest, request: Request, db: Sess
     if not ok:
         return PasswordResetResponse(success=False, message=msg)
 
-    logger.info(f"🔑 [LOCAL DEV LOG] Password Reset OTP Code for {email_clean}: {otp_code}")
-    print(f"\n==================================================")
-    print(f"🔑 LOCAL DEV OTP CODE FOR {email_clean}: {otp_code}")
-    print(f"==================================================\n")
+    logger.info(f"🔑 Password reset OTP requested and generated for {email_clean}")
 
     # 3. Send email asynchronously via Gmail SMTP
     try:
@@ -79,13 +82,17 @@ async def forgot_password(req: ForgotPasswordRequest, request: Request, db: Sess
         logger.error(f"Failed to dispatch reset email: {e}")
         return PasswordResetResponse(
             success=False,
-            message=f"Failed to send email: {str(e)}"
+            message="Failed to deliver reset email. Please contact hospital support."
         )
 
     return PasswordResetResponse(success=True, message="OTP Sent Successfully")
 
 @router.post("/verify-otp", response_model=PasswordResetResponse)
-async def verify_otp(req: VerifyOTPRequest, db: Session = Depends(get_db)):
+async def verify_otp(
+    req: VerifyOTPRequest,
+    db: Session = Depends(get_db),
+    _limiter: None = Depends(rate_limit(max_requests=10, window_seconds=60, prefix="verify_otp"))
+):
     """
     Verify 6-digit OTP code for password reset.
     """
@@ -99,7 +106,11 @@ async def verify_otp(req: VerifyOTPRequest, db: Session = Depends(get_db)):
     return PasswordResetResponse(success=True, message="OTP Verified")
 
 @router.post("/reset-password", response_model=PasswordResetResponse)
-async def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+async def reset_password(
+    req: ResetPasswordRequest,
+    db: Session = Depends(get_db),
+    _limiter: None = Depends(rate_limit(max_requests=5, window_seconds=600, prefix="reset_pw"))
+):
     """
     Reset user password after verifying passwords match, strength rules, and OTP record.
     """

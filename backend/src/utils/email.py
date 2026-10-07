@@ -3,10 +3,13 @@ Health Analyzer Email Utility
 Professional medical-themed HTML & Plain Text templates for Password Reset OTP.
 """
 
+import html
+
 def get_password_reset_email_template(otp_code: str, user_name: str = "User") -> tuple[str, str]:
     """
     Returns (html_content, text_content) tuple for Health Analyzer OTP email.
     """
+    safe_name = html.escape(str(user_name or "User"))
     text_content = f"""Hello {user_name},
 
 Your One Time Password for resetting your password is:
@@ -52,7 +55,7 @@ Health Analyzer Team
             <p>Clinical Intelligence & Healthcare Analytics</p>
         </div>
         <div class="content">
-            <div class="greeting">Hello {user_name},</div>
+            <div class="greeting">Hello {safe_name},</div>
             <p>We received a request to reset your password for your <strong>Health Analyzer</strong> account.</p>
             <p>Your One Time Password (OTP) code is below:</p>
             

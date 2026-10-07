@@ -1,4 +1,5 @@
 import secrets
+import hashlib
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Tuple, Optional
@@ -8,6 +9,9 @@ from sqlalchemy import delete, select, func
 from src.models import PasswordResetOTP
 
 logger = logging.getLogger("health_analyzer.otp_service")
+
+def _hash_otp(otp_str: str) -> str:
+    return hashlib.sha256(otp_str.strip().encode("utf-8")).hexdigest()
 
 class OTPService:
     """
@@ -77,7 +81,7 @@ class OTPService:
 
         otp_record = PasswordResetOTP(
             email=email,
-            otp=otp_code,
+            otp=_hash_otp(otp_code),
             attempts=0,
             verified=False,
             created_at=now,
@@ -133,8 +137,14 @@ class OTPService:
             db.commit()
             return False, "Maximum OTP verification attempts exceeded. Please request a new OTP."
 
-        # Verify OTP value
-        if record.otp != input_otp.strip():
+        # Verify OTP value timing-safely against hash (or legacy plaintext)
+        cleaned_input = input_otp.strip()
+        expected_hash = record.otp
+        input_hash = _hash_otp(cleaned_input)
+
+        is_valid = secrets.compare_digest(expected_hash, input_hash) or secrets.compare_digest(expected_hash, cleaned_input)
+
+        if not is_valid:
             record.attempts += 1
             db.commit()
             remaining = 5 - record.attempts

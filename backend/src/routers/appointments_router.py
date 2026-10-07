@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
@@ -7,8 +7,11 @@ from datetime import datetime
 from src.database import get_db
 from src.models import Appointment, Doctor, Department, User, Notification
 from src.auth import get_current_user
+from src.security.rate_limiter import rate_limit
 
 router = APIRouter(prefix="/appointments", tags=["Appointments"])
+
+ALLOWED_APPOINTMENT_STATUSES = {"REQUESTED", "CONFIRMED", "REJECTED", "CANCELLED", "COMPLETED", "NO_SHOW"}
 
 class AppointmentCreate(BaseModel):
     doctor_id: int
@@ -22,7 +25,12 @@ class AppointmentStatusUpdate(BaseModel):
     notes: Optional[str] = None
 
 @router.post("")
-def book_appointment(data: AppointmentCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def book_appointment(
+    data: AppointmentCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    _limiter: None = Depends(rate_limit(max_requests=15, window_seconds=60, prefix="book_app"))
+):
     doctor = db.query(Doctor).filter(Doctor.id == data.doctor_id).first()
     if not doctor:
         raise HTTPException(status_code=404, detail="Doctor not found")
@@ -137,6 +145,10 @@ def get_appointment_availability(
 
 @router.put("/{appointment_id}/status")
 def update_appointment_status(appointment_id: int, update: AppointmentStatusUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    status_clean = (update.status or "").strip().upper()
+    if status_clean not in ALLOWED_APPOINTMENT_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid appointment status. Allowed: {', '.join(sorted(ALLOWED_APPOINTMENT_STATUSES))}")
+
     app = db.query(Appointment).filter(Appointment.id == appointment_id).first()
     if not app:
         raise HTTPException(status_code=404, detail="Appointment not found")
@@ -145,7 +157,7 @@ def update_appointment_status(appointment_id: int, update: AppointmentStatusUpda
     if user_role in ['patient', 'user']:
         if app.patient_id != current_user.user_id:
             raise HTTPException(status_code=403, detail="Not authorized to update this appointment")
-        if update.status != "CANCELLED":
+        if status_clean != "CANCELLED":
             raise HTTPException(status_code=400, detail="Patients may only cancel appointments")
     elif user_role in ['doctor', 'emergency_doctor']:
         doc = db.query(Doctor).filter(Doctor.user_id == current_user.user_id).first()
@@ -154,7 +166,7 @@ def update_appointment_status(appointment_id: int, update: AppointmentStatusUpda
     elif user_role not in ['admin', 'hospital_admin']:
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    app.status = update.status
+    app.status = status_clean
     if update.notes:
         app.notes = update.notes
 

@@ -1,14 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+import logging
 
 from src.database import get_db
 from src.models import EmergencyRequest, Doctor, User, Notification
-from src.auth import get_current_user
+from src.auth import get_current_user, get_current_doctor
+from src.security.rate_limiter import rate_limit
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/emergency", tags=["Emergency System"])
+
+ALLOWED_SEVERITIES = {"LOW", "MEDIUM", "HIGH", "CRITICAL"}
+ALLOWED_STATUSES = {"ACKNOWLEDGED", "ASSIGNED", "IN_REVIEW", "IN_TREATMENT", "RESOLVED", "CANCELLED"}
 
 class EmergencyCreate(BaseModel):
     severity: str = "HIGH" # LOW, MEDIUM, HIGH, CRITICAL
@@ -21,16 +28,25 @@ class EmergencyStatusUpdate(BaseModel):
     doctor_id: Optional[int] = None
 
 @router.post("/request")
-def trigger_emergency(data: EmergencyCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def trigger_emergency(
+    data: EmergencyCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    _limiter: None = Depends(rate_limit(max_requests=5, window_seconds=300, prefix="emergency_req"))
+):
+    severity_clean = (data.severity or "HIGH").strip().upper()
+    if severity_clean not in ALLOWED_SEVERITIES:
+        raise HTTPException(status_code=400, detail=f"Invalid severity level. Allowed: {', '.join(sorted(ALLOWED_SEVERITIES))}")
+
     user = db.query(User).filter(User.id == current_user.user_id).first()
     
     request = EmergencyRequest(
         patient_id=current_user.user_id,
-        severity=data.severity,
+        severity=severity_clean,
         status="REQUESTED",
-        symptoms=data.symptoms or "Patient initiated urgent emergency trigger",
-        location=data.location or "Patient Current Location",
-        contact_phone=data.contact_phone or (user.mobile_no if user else "")
+        symptoms=(data.symptoms or "Patient initiated urgent emergency trigger")[:500],
+        location=(data.location or "Patient Current Location")[:255],
+        contact_phone=(data.contact_phone or (user.mobile_no if user else ""))[:30]
     )
     db.add(request)
     
@@ -40,16 +56,37 @@ def trigger_emergency(data: EmergencyCreate, db: Session = Depends(get_db), curr
         db.add(Notification(
             user_id=doc.user_id,
             title="🔴 EMERGENCY ALERT TRIGGERED",
-            message=f"Urgent emergency from patient {user.full_name if user else ''}. Symptoms: {data.symptoms}",
+            message=f"Urgent emergency from patient {user.full_name if user else ''}. Symptoms: {data.symptoms or 'Urgent'}",
             type="EMERGENCY"
         ))
 
     db.commit()
     db.refresh(request)
+    logger.info(f"Emergency request #{request.id} initiated by user #{current_user.user_id}")
     return {"message": "Emergency request initiated. Response team notified.", "emergency_id": request.id}
 
+@router.get("/my")
+def get_my_emergencies(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    """Allows patient to view only their own emergency history."""
+    requests = db.query(EmergencyRequest).filter(
+        EmergencyRequest.patient_id == current_user.user_id
+    ).order_by(EmergencyRequest.created_at.desc()).limit(50).all()
+    
+    return [
+        {
+            "id": r.id,
+            "severity": r.severity,
+            "status": r.status,
+            "symptoms": r.symptoms,
+            "location": r.location,
+            "created_at": r.created_at.strftime("%Y-%m-%d %H:%M:%S") if r.created_at else ""
+        }
+        for r in requests
+    ]
+
 @router.get("/queue")
-def get_emergency_queue(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def get_emergency_queue(db: Session = Depends(get_db), current_user = Depends(get_current_doctor)):
+    """Restricted to doctors and admins. Regular patients cannot access the emergency queue."""
     requests = db.query(EmergencyRequest).filter(EmergencyRequest.status != "RESOLVED").order_by(EmergencyRequest.created_at.desc()).all()
     result = []
     for r in requests:
@@ -68,29 +105,39 @@ def get_emergency_queue(db: Session = Depends(get_db), current_user=Depends(get_
             "symptoms": r.symptoms,
             "location": r.location,
             "assigned_doctor": doc_user.full_name if doc_user else "Unassigned",
-            "created_at": r.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            "created_at": r.created_at.strftime("%Y-%m-%d %H:%M:%S") if r.created_at else ""
         })
     return result
 
 @router.put("/{emergency_id}/status")
-def update_emergency_status(emergency_id: int, update: EmergencyStatusUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def update_emergency_status(
+    emergency_id: int,
+    update: EmergencyStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_doctor)
+):
+    """Restricted to clinicians and administrators."""
+    status_clean = (update.status or "").strip().upper()
+    if status_clean not in ALLOWED_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid emergency status. Allowed: {', '.join(sorted(ALLOWED_STATUSES))}")
+
     req = db.query(EmergencyRequest).filter(EmergencyRequest.id == emergency_id).first()
     if not req:
         raise HTTPException(status_code=404, detail="Emergency request not found")
 
-    req.status = update.status
+    req.status = status_clean
     if update.doctor_id:
         req.assigned_doctor_id = update.doctor_id
-    if update.status == "RESOLVED":
+    if status_clean == "RESOLVED":
         req.resolved_at = datetime.now()
 
     # Notify patient
     db.add(Notification(
         user_id=req.patient_id,
         title="Emergency Request Status Update",
-        message=f"Your emergency request status is now: {update.status}.",
+        message=f"Your emergency request status is now: {status_clean}.",
         type="EMERGENCY"
     ))
 
     db.commit()
-    return {"message": f"Emergency status updated to {update.status}"}
+    return {"message": f"Emergency status updated to {status_clean}"}

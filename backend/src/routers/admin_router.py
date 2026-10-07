@@ -2,11 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Optional
 import json
 import os
+import logging
 
 from src.database import get_db_connection, get_db
 from src.auth import get_current_admin
 from sqlalchemy.orm import Session
 from src.models import ModelRegistry, AuditLog
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="", tags=["Admin Administration"])
 
@@ -88,8 +91,11 @@ async def get_admin_data(current_user=Depends(get_current_admin)):
             
         return {"patients": patients_data}
         
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error fetching admin report data: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve administration reports data")
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
@@ -130,8 +136,11 @@ async def get_admin_stats(db: Session = Depends(get_db), current_user=Depends(ge
                 "cbc": cbc_count
             }
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error calculating admin stats: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve administration statistics")
 
 
 @router.get("/admin/models")

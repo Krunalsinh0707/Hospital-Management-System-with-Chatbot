@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Optional
@@ -6,6 +6,7 @@ from datetime import timedelta, datetime
 import random
 import re
 import json
+import logging
 
 from src.database import get_db_connection
 from src.auth import (
@@ -13,8 +14,14 @@ from src.auth import (
     verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from src.sms_service import send_otp_sms
+from src.security.rate_limiter import rate_limit
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Authentication"])
+
+ALLOWED_BLOOD_GROUPS = {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"}
+SAFE_USER_COLUMNS = "id, email, full_name, role, blood_group, mobile_no, email_verified, mobile_verified, profile_data, created_at, updated_at"
 
 class UserCreate(BaseModel):
     email: str
@@ -51,15 +58,29 @@ def _is_valid_mobile(mobile_no: str) -> bool:
     return 10 <= len(normalized) <= 15
 
 @router.post("/register", response_model=Token)
-async def register(user: UserCreate):
+async def register(
+    user: UserCreate,
+    _limiter: None = Depends(rate_limit(max_requests=5, window_seconds=600, prefix="register"))
+):
     email = (user.email or "").strip().lower()
     mobile_no = _normalize_mobile(user.mobile_no)
+    full_name = (user.full_name or "").strip()
+    blood_group = (user.blood_group or "").strip().upper()
 
     if not _is_valid_email(email):
         raise HTTPException(status_code=400, detail="Invalid email format")
 
     if not _is_valid_mobile(mobile_no):
         raise HTTPException(status_code=400, detail="Valid mobile number is required")
+
+    if blood_group not in ALLOWED_BLOOD_GROUPS:
+        raise HTTPException(status_code=400, detail=f"Invalid blood group. Allowed values: {', '.join(sorted(ALLOWED_BLOOD_GROUPS))}")
+
+    if len(full_name) < 2 or len(full_name) > 100:
+        raise HTTPException(status_code=400, detail="Full name must be between 2 and 100 characters")
+
+    if len(user.password or "") < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -83,7 +104,7 @@ async def register(user: UserCreate):
         INSERT INTO users (email, mobile_no, blood_group, password_hash, full_name, role)
         VALUES (%s, %s, %s, %s, %s, 'user')
         """,
-        (email, mobile_no, user.blood_group, hashed_password, user.full_name)
+        (email, mobile_no, blood_group, hashed_password, full_name)
     )
     conn.commit()
     user_id = cursor.lastrowid
@@ -100,7 +121,10 @@ async def register(user: UserCreate):
 
 
 @router.post("/token", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    _limiter: None = Depends(rate_limit(max_requests=10, window_seconds=60, prefix="login"))
+):
     login_id_raw = (form_data.username or "").strip()
     login_id_email = login_id_raw.lower()
     login_id_mobile = _normalize_mobile(login_id_raw)
@@ -109,9 +133,9 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     cursor = conn.cursor(dictionary=True)
 
     if "@" in login_id_raw:
-        cursor.execute("SELECT * FROM users WHERE email = %s", (login_id_email,))
+        cursor.execute("SELECT id, email, password_hash, role FROM users WHERE email = %s", (login_id_email,))
     else:
-        cursor.execute("SELECT * FROM users WHERE mobile_no = %s", (login_id_mobile,))
+        cursor.execute("SELECT id, email, password_hash, role FROM users WHERE mobile_no = %s", (login_id_mobile,))
     user = cursor.fetchone()
 
     if not user or not verify_password(form_data.password, user["password_hash"]):
@@ -144,7 +168,7 @@ async def read_users_me(current_user=Depends(get_current_user)):
         
     try:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE id = %s", (current_user.user_id,))
+        cursor.execute(f"SELECT {SAFE_USER_COLUMNS} FROM users WHERE id = %s", (current_user.user_id,))
         user = cursor.fetchone()
         
         if user is None:
@@ -160,8 +184,11 @@ async def read_users_me(current_user=Depends(get_current_user)):
             user["profile_data"] = {}
             
         return user
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error fetching user profile: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve user profile")
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
@@ -208,7 +235,7 @@ async def update_user_me(user_update: UserUpdate, current_user=Depends(get_curre
 
         conn.commit()
         
-        cursor.execute("SELECT * FROM users WHERE id = %s", (current_user.user_id,))
+        cursor.execute(f"SELECT {SAFE_USER_COLUMNS} FROM users WHERE id = %s", (current_user.user_id,))
         updated_user = cursor.fetchone()
 
         if updated_user and updated_user.get("profile_data") and isinstance(updated_user["profile_data"], str):
@@ -221,10 +248,13 @@ async def update_user_me(user_update: UserUpdate, current_user=Depends(get_curre
 
         return updated_user
         
+    except HTTPException:
+        raise
     except Exception as e:
-        if "Duplicate entry" in str(e):
+        if "duplicate" in str(e).lower():
             raise HTTPException(status_code=400, detail="Mobile number already registered by another user")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error updating user profile: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update user profile")
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()

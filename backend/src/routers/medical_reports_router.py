@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 import os
 import shutil
 import json
+import logging
 from datetime import datetime
 
 from src.database import get_db
@@ -12,6 +13,10 @@ from src.models import MedicalReport, ReportExtraction, AIAnalysis, DoctorReview
 from src.auth import get_current_user
 from src.pdf_service import extract_parameters_from_pdf
 from src.ml.department_detector import detect_department
+from src.security.rate_limiter import rate_limit
+from src.security.file_security import validate_uploaded_file, sanitize_filename
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/medical-reports", tags=["Digital Medical Reports"])
 
@@ -99,16 +104,20 @@ async def upload_existing_report(
     file: UploadFile = File(...),
     report_title: Optional[str] = Form(None),
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    _limiter: None = Depends(rate_limit(max_requests=10, window_seconds=60, prefix="report_upload"))
 ):
+    # Validate uploaded file for MIME type, magic bytes, and size limit
+    content = await validate_uploaded_file(file, max_size_bytes=10 * 1024 * 1024)
+    safe_filename = sanitize_filename(file.filename, prefix=f"user_{current_user.user_id}_")
+
     os.makedirs("uploads/reports", exist_ok=True)
-    filename = f"user_{current_user.user_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}"
-    file_path = os.path.join("uploads/reports", filename)
+    file_path = os.path.join("uploads/reports", safe_filename)
 
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        buffer.write(content)
 
-    title = report_title or file.filename
+    title = (report_title or file.filename or "Uploaded Report").strip()[:150]
 
     # Create Medical Report record
     new_report = MedicalReport(
@@ -116,7 +125,7 @@ async def upload_existing_report(
         report_source="existing_upload",
         report_title=title,
         report_type="Uploaded Diagnostic Report",
-        original_filename=file.filename,
+        original_filename=file.filename[:255] if file.filename else safe_filename,
         file_path=file_path,
         status="UPLOADED"
     )
@@ -128,13 +137,13 @@ async def upload_existing_report(
     extracted_data = {}
     raw_text = ""
     try:
-        if file.filename.lower().endswith(".pdf"):
+        if safe_filename.lower().endswith(".pdf"):
             extracted_data = extract_parameters_from_pdf(file_path)
             raw_text = json.dumps(extracted_data)
         else:
             raw_text = "Image report upload"
     except Exception as e:
-        print(f"[OCR] Extraction warning: {e}")
+        logger.warning(f"[OCR] Extraction warning: {e}")
 
     extraction = ReportExtraction(
         report_id=new_report.id,
@@ -170,6 +179,14 @@ def create_hospital_report(data: HospitalReportCreate, db: Session = Depends(get
     if not doctor and current_user.role not in ['admin', 'hospital_admin']:
         raise HTTPException(status_code=403, detail="Doctor access required")
 
+    patient = db.query(User).filter(User.id == data.patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Target patient account not found")
+
+    dept = db.query(Department).filter(Department.id == data.department_id).first()
+    if not dept:
+        raise HTTPException(status_code=404, detail="Department not found")
+
     doc_id = doctor.id if doctor else None
 
     new_report = MedicalReport(
@@ -177,8 +194,8 @@ def create_hospital_report(data: HospitalReportCreate, db: Session = Depends(get
         doctor_id=doc_id,
         department_id=data.department_id,
         report_source="hospital",
-        report_title=data.report_title,
-        report_type=data.report_type,
+        report_title=data.report_title[:150],
+        report_type=data.report_type[:100],
         status="DOCTOR_REVIEWED"
     )
     db.add(new_report)
@@ -210,6 +227,10 @@ def create_hospital_report(data: HospitalReportCreate, db: Session = Depends(get
 
 @router.get("/doctor/queue")
 def get_reports_pending_review(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    user_role = (current_user.role or "").lower()
+    if user_role not in ['doctor', 'emergency_doctor', 'admin', 'hospital_admin']:
+        raise HTTPException(status_code=403, detail="Doctor or admin privileges required")
+
     doctor = db.query(Doctor).filter(Doctor.user_id == current_user.user_id).first()
     
     query = db.query(MedicalReport).filter(MedicalReport.status.in_(["READY_FOR_REVIEW", "AI_PRE_ANALYZED", "UPLOADED", "OCR_EXTRACTED"]))

@@ -16,8 +16,8 @@ class EmailService:
     def __init__(self):
         self.server = os.getenv("SMTP_SERVER", os.getenv("EMAIL_HOST", "smtp.gmail.com"))
         self.port = int(os.getenv("SMTP_PORT", os.getenv("EMAIL_PORT", 587)))
-        self.sender_email = os.getenv("SMTP_EMAIL", os.getenv("EMAIL_ADDRESS", "morikrunalsinh7@gmail.com"))
-        self.password = os.getenv("SMTP_PASSWORD", os.getenv("EMAIL_PASSWORD", "Krunal@0707"))
+        self.sender_email = os.getenv("SMTP_EMAIL", os.getenv("EMAIL_ADDRESS", "")).strip()
+        self.password = os.getenv("SMTP_PASSWORD", os.getenv("EMAIL_PASSWORD", "")).strip()
 
     def _send_otp_sync(self, recipient_email: str, otp_code: str, user_name: str = "User") -> bool:
         """Synchronous SMTP worker function."""
@@ -31,6 +31,10 @@ class EmailService:
         # Attach plain text and HTML versions
         msg.attach(MIMEText(text_content, "plain", "utf-8"))
         msg.attach(MIMEText(html_content, "html", "utf-8"))
+
+        if not self.sender_email or not self.password:
+            logger.warning(f"⚠️ SMTP credentials not set in environment. Skipping email dispatch to {recipient_email}.")
+            return False
 
         try:
             logger.info(f"Connecting to SMTP server {self.server}:{self.port} for {recipient_email}...")

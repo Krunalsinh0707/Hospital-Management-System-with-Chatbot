@@ -2,10 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 from typing import Optional
 import json
+import logging
 
 from src.database import get_db_connection
 from src.auth import get_current_user
 from src.pdf_generator import generate_pdf_report
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Patient Reports & History"])
 
@@ -95,8 +98,11 @@ async def save_report(report: ReportSave, current_user=Depends(get_current_user)
         )
         conn.commit()
         return {"status": "saved"}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error saving patient report: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save patient report")
     finally:
         cursor.close()
         conn.close()
@@ -123,8 +129,11 @@ async def get_user_history(limit: int = 50, offset: int = 0, current_user=Depend
         
         reports = cursor.fetchall()
         return {"reports": reports}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error fetching patient history: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve report history")
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
@@ -150,8 +159,11 @@ async def save_heart_report(report: HeartReportSave, current_user=Depends(get_cu
         ))
         conn.commit()
         return {"status": "saved"}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error saving heart report: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save heart report")
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
@@ -168,8 +180,11 @@ async def get_heart_history(limit: int = 50, offset: int = 0, current_user=Depen
         cursor.execute("SELECT * FROM heart_reports WHERE user_id = %s ORDER BY created_at DESC LIMIT %s OFFSET %s", (current_user.user_id, limit, offset))
         reports = cursor.fetchall()
         return {"reports": reports}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error fetching heart history: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve heart report history")
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
@@ -195,8 +210,11 @@ async def save_htn_report(report: HypertensionReportSave, current_user=Depends(g
         ))
         conn.commit()
         return {"status": "saved"}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error saving hypertension report: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save hypertension report")
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
@@ -213,8 +231,11 @@ async def get_htn_history(limit: int = 50, offset: int = 0, current_user=Depends
         cursor.execute("SELECT * FROM hypertension_reports WHERE user_id = %s ORDER BY created_at DESC LIMIT %s OFFSET %s", (current_user.user_id, limit, offset))
         reports = cursor.fetchall()
         return {"reports": reports}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error fetching hypertension history: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve hypertension report history")
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
@@ -257,7 +278,8 @@ async def export_report_pdf(report_type: str, report_id: int, current_user=Depen
     except HTTPException as he:
         raise he
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error exporting report PDF: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate report PDF")
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()

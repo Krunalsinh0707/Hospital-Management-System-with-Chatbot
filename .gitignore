@@ -14,6 +14,20 @@ __pycache__/
 # =========================
 .env
 .env.*
+!.env.example
+
+# =========================
+# Database backups, dumps & sensitive logs
+# =========================
+*.sql
+*.dump
+*.db
+*.sqlite
+*.log
+error_log.json
+backend/error_log.json
+health_analyzer_mariadb_backup.sql
+backend/health_analyzer_mariadb_backup.sql
 
 # =========================
 # Node.js

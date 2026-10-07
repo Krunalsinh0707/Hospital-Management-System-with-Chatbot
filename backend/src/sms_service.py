@@ -26,6 +26,7 @@ def send_otp_sms(mobile_no: str, otp: str) -> bool:
         except Exception as e:
             print(f"[ERROR] Failed to send SMS via Twilio: {e}")
 
-    # Fallback log for local development
-    print(f"[DEV SMS GATEWAY] OTP for {mobile_no} is: {otp}")
+    # Fallback log for local development (masked)
+    masked_no = mobile_no[-4:] if len(mobile_no) >= 4 else "XXXX"
+    print(f"[DEV SMS GATEWAY] OTP verification dispatched to ending in ...{masked_no}")
     return True

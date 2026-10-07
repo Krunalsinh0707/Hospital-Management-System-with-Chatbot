@@ -1,4 +1,4 @@
- # Web Framework & Server
+# Web Framework & Server
 fastapi
 uvicorn
 python-multipart
@@ -31,28 +31,14 @@ scipy
 joblib
 matplotlib
 seaborn
-flask
-joblib
-fastapi
-uvicorn
 
 # PDF & Document Processing
 pdfplumber
-python-multipart
-mysql-connector-python
-python-jose[cryptography]
-passlib[bcrypt]
-alembic
-sqlalchemy
-pymysql
-psycopg[binary]
 pytesseract
 Pillow
 reportlab
-google-generativeai
-chromadb
 
-# Testing & Graphify Codebase Utilities
+# Testing & Utilities
 pytest
 anytechie-graphify
 requests

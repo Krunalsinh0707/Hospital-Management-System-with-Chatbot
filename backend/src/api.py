@@ -38,12 +38,14 @@ from src.routers import (
 def create_default_admin():
     db = SessionLocal()
     try:
-        admin = db.query(DBUser).filter(DBUser.email == "admin@gmail.com").first()
+        admin_email = os.getenv("DEFAULT_ADMIN_EMAIL", "admin@gmail.com")
+        admin = db.query(DBUser).filter(DBUser.email == admin_email).first()
         if not admin:
-            hashed_password = get_password_hash("Admin@123")
+            admin_password = os.getenv("DEFAULT_ADMIN_PASSWORD", "Admin@123")
+            hashed_password = get_password_hash(admin_password)
             new_admin = DBUser(
-                email="admin@gmail.com",
-                mobile_no="0000000000",
+                email=admin_email,
+                mobile_no=os.getenv("DEFAULT_ADMIN_PHONE", "0000000000"),
                 blood_group="O+",
                 password_hash=hashed_password,
                 full_name="System Admin",
@@ -92,13 +94,44 @@ def _get_allowed_origins() -> List[str]:
     ]
     return list(dict.fromkeys(default_origins + extra_origins))
 
+ALLOWED_CORS_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+ALLOWED_CORS_HEADERS = ["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_get_allowed_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=ALLOWED_CORS_METHODS,
+    allow_headers=ALLOWED_CORS_HEADERS,
 )
+
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import logging
+
+logger = logging.getLogger("health_analyzer.api")
+
+# ---------------- SECURITY HEADERS MIDDLEWARE ----------------
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()"
+    if os.getenv("ENVIRONMENT", "development").lower() == "production":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
+# ---------------- GLOBAL UNHANDLED EXCEPTION HANDLER ----------------
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception on {request.method} {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal server error occurred. Please contact hospital administrator."}
+    )
 
 # ---------------- INCLUDE API ROUTERS ----------------
 app.include_router(auth_router.router)
@@ -140,11 +173,11 @@ def health_check(db=Depends(get_db)):
             "connected": True
         }
     except Exception as e:
+        logger.error(f"Health check database ping failed: {e}")
         return {
             "status": "unhealthy",
             "database": "PostgreSQL",
-            "connected": False,
-            "error": str(e)
+            "connected": False
         }
 
 

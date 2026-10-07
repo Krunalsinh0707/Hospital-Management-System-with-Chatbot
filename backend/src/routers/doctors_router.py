@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from src.database import get_db
 from src.models import Doctor, Department, User
-from src.auth import get_current_user, get_current_admin, get_password_hash
+from src.auth import get_current_user, get_current_doctor, get_current_admin, get_password_hash
 
 router = APIRouter(prefix="/doctors", tags=["Doctors Management"])
 
@@ -82,7 +82,7 @@ def create_doctor(data: DoctorCreate, db: Session = Depends(get_db), current_use
     return {"message": "Doctor account created successfully", "doctor_id": new_doctor.id}
 
 @router.get("/me")
-def get_doctor_profile(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def get_doctor_profile(db: Session = Depends(get_db), current_user=Depends(get_current_doctor)):
     doctor = db.query(Doctor).filter(Doctor.user_id == current_user.user_id).first()
     if not doctor:
         raise HTTPException(status_code=404, detail="Doctor profile not found")
@@ -103,9 +103,9 @@ def get_doctor_profile(db: Session = Depends(get_db), current_user=Depends(get_c
     }
 
 @router.get("/patient/{patient_id}")
-def get_patient_clinical_summary(patient_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def get_patient_clinical_summary(patient_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_doctor)):
     doctor = db.query(Doctor).filter(Doctor.user_id == current_user.user_id).first()
-    if not doctor and current_user.role not in ['admin', 'hospital_admin', 'doctor', 'emergency_doctor']:
+    if not doctor and current_user.role not in ['admin', 'hospital_admin', 'emergency_doctor']:
         raise HTTPException(status_code=403, detail="Doctor privileges required to access clinical patient record")
 
     patient = db.query(User).filter(User.id == patient_id).first()

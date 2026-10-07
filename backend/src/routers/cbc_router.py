@@ -1,14 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from pydantic import BaseModel
 from typing import Optional
 import os
 import shutil
 import json
+import logging
 
 from src.database import get_db_connection
 from src.auth import get_current_user
 from src.pdf_service import extract_cbc_from_file
 from src.cbc_analysis import interpret_cbc, process_manual_cbc
+from src.security.rate_limiter import rate_limit
+from src.security.file_security import validate_uploaded_file, sanitize_filename
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["CBC Analysis"])
 
@@ -33,12 +38,19 @@ class CbcReportSave(BaseModel):
     source: str = "manual"
 
 @router.post("/cbc/upload-report")
-async def upload_cbc_report(file: UploadFile = File(...), current_user=Depends(get_current_user)):
+async def upload_cbc_report(
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user),
+    _limiter: None = Depends(rate_limit(max_requests=10, window_seconds=60, prefix="cbc_upload"))
+):
+    content = await validate_uploaded_file(file, max_size_bytes=10 * 1024 * 1024)
+    safe_filename = sanitize_filename(file.filename, prefix=f"cbc_{current_user.user_id}_")
+
     os.makedirs("uploads", exist_ok=True)
-    file_path = f"uploads/{file.filename}"
+    file_path = os.path.join("uploads", safe_filename)
 
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        buffer.write(content)
 
     cbc_data = extract_cbc_from_file(file_path)
     interpretation = interpret_cbc(cbc_data)
@@ -49,12 +61,12 @@ async def upload_cbc_report(file: UploadFile = File(...), current_user=Depends(g
         text_summary = f"Uploaded CBC Report '{file.filename}': Extracted Hematology Data: {json.dumps(cbc_data)} | Health Score: {interpretation.get('health_score')}/100 | Urgency: {interpretation.get('urgency')}"
         vector_store.add_document_chunks(
             user_id=current_user.user_id,
-            doc_id=file.filename,
+            doc_id=safe_filename,
             chunks=[text_summary],
-            metadata={"filename": file.filename, "type": "cbc_report"}
+            metadata={"filename": safe_filename, "type": "cbc_report"}
         )
     except Exception as e:
-        print(f"[WARNING] Failed to index CBC upload in ChromaDB: {e}")
+        logger.warning(f"[WARNING] Failed to index CBC upload in ChromaDB: {e}")
 
     return {"cbc": cbc_data, "interpretation": interpretation}
 
@@ -88,8 +100,11 @@ async def save_cbc_report(report: CbcReportSave, current_user=Depends(get_curren
         ))
         conn.commit()
         return {"status": "saved"}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error saving CBC report: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save CBC report")
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
@@ -121,8 +136,11 @@ async def get_cbc_history(limit: int = 50, offset: int = 0, current_user=Depends
             if 'interpretation_json' in r: del r['interpretation_json']
             
         return {"reports": reports}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error fetching CBC history: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve CBC history")
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
