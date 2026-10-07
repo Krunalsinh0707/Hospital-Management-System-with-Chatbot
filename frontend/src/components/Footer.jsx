@@ -51,25 +51,13 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Account Portals (Col 9-10) */}
+          {/* Patient Access (Col 9-10) */}
           <div className="lg:col-span-2 space-y-3">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Portals</h3>
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Patient Access</h3>
             <ul className="space-y-2 text-xs">
               <li>
                 <Link to="/patient/login" className="hover:text-teal-400 transition-colors flex items-center gap-1">
-                  <span>Patient Login</span>
-                  <ArrowUpRight size={12} className="opacity-60" />
-                </Link>
-              </li>
-              <li>
-                <Link to="/doctor/login" className="hover:text-teal-400 transition-colors flex items-center gap-1">
-                  <span>Doctor Login</span>
-                  <ArrowUpRight size={12} className="opacity-60" />
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/login" className="hover:text-teal-400 transition-colors flex items-center gap-1">
-                  <span>Admin Login</span>
+                  <span>Patient Sign In</span>
                   <ArrowUpRight size={12} className="opacity-60" />
                 </Link>
               </li>
@@ -78,6 +66,18 @@ const Footer = () => {
                   <span>Register Patient</span>
                   <ArrowUpRight size={12} className="opacity-80" />
                 </Link>
+              </li>
+              <li>
+                <a href="#appointment-workflow" className="hover:text-teal-400 transition-colors flex items-center gap-1">
+                  <span>Book Appointment</span>
+                  <ArrowUpRight size={12} className="opacity-60" />
+                </a>
+              </li>
+              <li>
+                <a href="#emergency" className="text-rose-400 hover:text-rose-300 font-semibold transition-colors flex items-center gap-1">
+                  <span>Emergency Care</span>
+                  <ArrowUpRight size={12} className="opacity-60" />
+                </a>
               </li>
             </ul>
           </div>
@@ -99,7 +99,7 @@ const Footer = () => {
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>© {new Date().getFullYear()} MediNexus. AI-Powered Hospital Management &amp; Clinical Intelligence System.</p>
           <div className="flex items-center gap-6">
-            <span>Role-Based Secure Portals</span>
+            <span>Secure Patient Portal</span>
             <span className="w-1 h-1 rounded-full bg-slate-700" />
             <span>Doctor-Reviewed Insights</span>
           </div>

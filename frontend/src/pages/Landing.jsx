@@ -118,7 +118,6 @@ const defaultDepartments = [
 const Landing = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loginMenuOpen, setLoginMenuOpen] = useState(false);
   const [selectedDeptModal, setSelectedDeptModal] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -254,51 +253,11 @@ const Landing = () => {
           ))}
         </div>
 
-        {/* Right Action Portals & CTA */}
-        <div className="hidden sm:flex items-center gap-2.5">
-          {/* Dropdown for Portals */}
-          <div className="relative">
-            <button 
-              onClick={() => setLoginMenuOpen(!loginMenuOpen)}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors flex items-center gap-1.5"
-            >
-              <span>Portals</span>
-              <ChevronDown size={14} className={`transition-transform ${loginMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {loginMenuOpen && (
-              <div 
-                className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl p-2 shadow-xl border border-slate-100 flex flex-col gap-1 z-50"
-                onMouseLeave={() => setLoginMenuOpen(false)}
-              >
-                <button 
-                  onClick={() => { setLoginMenuOpen(false); navigate('/patient/login'); }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-teal-50 hover:text-[#0F9D8A] transition-colors flex items-center justify-between"
-                >
-                  <span>Patient Login</span>
-                  <User size={14} className="text-slate-400" />
-                </button>
-                <button 
-                  onClick={() => { setLoginMenuOpen(false); navigate('/doctor/login'); }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-teal-50 hover:text-[#0F9D8A] transition-colors flex items-center justify-between"
-                >
-                  <span>Doctor Login</span>
-                  <Stethoscope size={14} className="text-slate-400" />
-                </button>
-                <button 
-                  onClick={() => { setLoginMenuOpen(false); navigate('/admin/login'); }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-teal-50 hover:text-[#0F9D8A] transition-colors flex items-center justify-between"
-                >
-                  <span>Admin Login</span>
-                  <Shield size={14} className="text-slate-400" />
-                </button>
-              </div>
-            )}
-          </div>
-
+        {/* Right Actions & CTA */}
+        <div className="hidden sm:flex items-center gap-3">
           <button 
             onClick={() => navigate('/patient/login')}
-            className="hidden md:inline-flex px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-[#0F9D8A] hover:bg-slate-100 transition-colors"
+            className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-[#0F9D8A] hover:bg-slate-100 transition-colors"
           >
             Patient Sign In
           </button>
@@ -335,13 +294,16 @@ const Landing = () => {
             <a href="#clinical-intelligence" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-slate-700 hover:text-[#0F9D8A]">Clinical Intelligence</a>
             <a href="#emergency" onClick={() => setMobileMenuOpen(false)} className="text-sm font-bold text-rose-600">Emergency Support</a>
             
-            <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Access Portals</span>
-              <div className="grid grid-cols-3 gap-2">
-                <button onClick={() => navigate('/patient/login')} className="py-2.5 px-2 rounded-xl bg-slate-50 hover:bg-teal-50 text-[11px] font-bold text-slate-700">Patient</button>
-                <button onClick={() => navigate('/doctor/login')} className="py-2.5 px-2 rounded-xl bg-slate-50 hover:bg-teal-50 text-[11px] font-bold text-slate-700">Doctor</button>
-                <button onClick={() => navigate('/admin/login')} className="py-2.5 px-2 rounded-xl bg-slate-50 hover:bg-teal-50 text-[11px] font-bold text-slate-700">Admin</button>
-              </div>
+            <div className="pt-3 border-t border-slate-100 flex flex-col gap-2.5">
+              <button 
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate('/patient/login');
+                }} 
+                className="w-full py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:text-[#0F9D8A] hover:bg-slate-50 text-xs font-bold text-center transition-colors"
+              >
+                Patient Sign In
+              </button>
               <button 
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -349,7 +311,7 @@ const Landing = () => {
                   if (el) el.scrollIntoView({ behavior: 'smooth' });
                   else navigate('/appointments');
                 }} 
-                className="w-full py-3 rounded-xl bg-[#0F9D8A] text-white text-xs font-bold mt-1 shadow-md shadow-teal-600/20"
+                className="w-full py-3 rounded-xl bg-[#0F9D8A] text-white text-xs font-bold shadow-md shadow-teal-600/20"
               >
                 Book Appointment
               </button>
@@ -687,13 +649,10 @@ const Landing = () => {
                   <li className="flex items-start gap-2"><Check size={14} className="text-sky-400 shrink-0 mt-0.5" /><span>Handle priority escalation workflows</span></li>
                 </ul>
               </div>
-              <button
-                onClick={() => navigate('/doctor/login')}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 border border-slate-700"
-              >
-                <span>Doctor Workstation</span>
-                <ArrowRight size={15} />
-              </button>
+              <div className="w-full py-3 bg-slate-800/60 text-slate-400 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 border border-slate-700/60 select-none">
+                <Lock size={14} className="text-slate-400" />
+                <span>Authorized Clinicians Only</span>
+              </div>
             </div>
 
             {/* Admin Card */}
@@ -717,13 +676,10 @@ const Landing = () => {
                   <li className="flex items-start gap-2"><Check size={14} className="text-purple-400 shrink-0 mt-0.5" /><span>Manage platform configurations</span></li>
                 </ul>
               </div>
-              <button
-                onClick={() => navigate('/admin/login')}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 border border-slate-700"
-              >
-                <span>Admin Console</span>
-                <ArrowRight size={15} />
-              </button>
+              <div className="w-full py-3 bg-slate-800/60 text-slate-400 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 border border-slate-700/60 select-none">
+                <Lock size={14} className="text-slate-400" />
+                <span>Authorized Personnel Only</span>
+              </div>
             </div>
           </div>
         </div>
